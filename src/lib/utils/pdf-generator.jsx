@@ -3,97 +3,232 @@ import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'column',
-    backgroundColor: '#fff',
-    padding: 30,
+    padding: 35,
+    fontFamily: 'Times-Roman',
+  },
+  container: {
+    border: '1pt solid #777',
   },
   header: {
-    marginBottom: 20,
+    borderBottom: '1pt solid #777',
+    padding: 10,
     textAlign: 'center',
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 10,
-  },
-  subtitle: {
+  schoolName: {
     fontSize: 16,
-    marginBottom: 20,
+    fontWeight: 'bold',
+    color: '#444',
   },
-  section: {
-    margin: 10,
-    padding: 10,
+  subHeader: {
+    fontSize: 10,
+    color: '#555',
+    marginTop: 3,
+  },
+  studentInfoRow: {
+    flexDirection: 'row',
+    borderBottom: '1pt solid #777',
+    padding: 8,
+    fontSize: 9,
+  },
+  academicRecordHeader: {
+    borderBottom: '1pt solid #777',
+    padding: 8,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 12,
   },
   table: {
-    display: 'table',
-    width: 'auto',
+    width: '100%',
     marginVertical: 10,
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    borderBottomStyle: 'solid',
-    alignItems: 'center',
-    minHeight: 24,
+    borderBottom: '0.5pt solid #ddd',
+    paddingVertical: 4,
+    fontSize: 8,
   },
   tableHeader: {
     backgroundColor: '#f0f0f0',
-  },
-  tableCell: {
-    flex: 1,
-    padding: 5,
-  },
-  summaryBox: {
-    marginTop: 20,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#000',
-  },
-  text: {
-    fontSize: 12,
-    marginBottom: 5,
-  },
-  bold: {
     fontWeight: 'bold',
   },
+  courseTitle: {
+    flex: 6,
+  },
+  credits: {
+    flex: 2,
+    textAlign: 'center',
+  },
+  grade: {
+    flex: 2,
+    textAlign: 'center',
+  },
+  academicSummaryContainer: {
+    flexDirection: 'row',
+    borderBottom: '1pt solid #777',
+  },
+  academicSummary: {
+    width: '67%',
+    borderRight: '1pt solid #777',
+    padding: 8,
+  },
+  gradingScale: {
+    width: '33%',
+    padding: 8,
+  },
+  sectionTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    marginVertical: 2,
+  },
+  scaleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 8,
+    marginVertical: 2,
+  },
+  signatureContainer: {
+    flexDirection: 'row',
+    padding: 8,
+    fontSize: 9,
+  },
+  signatureColumn: {
+    flex: 1,
+  },
+  signatureLabel: {
+    fontSize: 8,
+    color: '#666',
+  },
+  signature: {
+    marginTop: 10,
+    fontStyle: 'italic',
+  },
+  label: {
+    fontSize: 8,
+    color: '#666',
+  },
+  value: {
+    fontSize: 9,
+  }
 });
+
+const gradingScale = [
+  { range: '90 - 100', grade: 'A' },
+  { range: '80 - 89', grade: 'B' },
+  { range: '70 - 79', grade: 'C' },
+  { range: '60 - 69', grade: 'D' },
+  { range: '59 - Below', grade: 'F' }
+];
 
 // Individual Transcript PDF Document
 const TranscriptDocument = ({ transcript }) => (
   <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{transcript.student.schoolName}</Text>
-        <Text style={styles.subtitle}>Official Academic Transcript</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.text}>Student Name: {transcript.student.fullName}</Text>
-        <Text style={styles.text}>Student ID: {transcript.student.studentId}</Text>
-        <Text style={styles.text}>Grade Level: {transcript.student.gradeLevel}</Text>
-        <Text style={styles.text}>Academic Year: {transcript.student.year}</Text>
-      </View>
-
-      <View style={styles.table}>
-        <View style={[styles.tableRow, styles.tableHeader]}>
-          <Text style={styles.tableCell}>Code</Text>
-          <Text style={styles.tableCell}>Unit Name</Text>
-          <Text style={styles.tableCell}>Grade</Text>
-          <Text style={styles.tableCell}>Credit Hours</Text>
+    <Page size="LETTER" style={styles.page}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.schoolName}>{transcript.student.schoolName}</Text>
+          <Text style={styles.subHeader}>OFFICIAL HIGH SCHOOL TRANSCRIPT</Text>
         </View>
-        {transcript.units.map((unit, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={styles.tableCell}>{unit.code}</Text>
-            <Text style={styles.tableCell}>{unit.name}</Text>
-            <Text style={styles.tableCell}>{unit.grade}</Text>
-            <Text style={styles.tableCell}>{unit.creditHours}</Text>
-          </View>
-        ))}
-      </View>
 
-      <View style={styles.summaryBox}>
-        <Text style={[styles.text, styles.bold]}>GPA: {transcript.gpa.toFixed(2)}</Text>
-        <Text style={[styles.text, styles.bold]}>Total Credit Hours: {transcript.totalCreditHours}</Text>
+        {/* Student Info Row 1 */}
+        <View style={styles.studentInfoRow}>
+          <View style={{ flex: 4 }}>
+            <Text style={styles.label}>STUDENT NAME</Text>
+            <Text style={styles.value}>{transcript.student.fullName}</Text>
+          </View>
+          <View style={{ flex: 2 }}>
+            <Text style={styles.label}>GENDER</Text>
+            <Text style={styles.value}>{transcript.student.gender || 'N/A'}</Text>
+          </View>
+          <View style={{ flex: 2 }}>
+            <Text style={styles.label}>STUDENT ID</Text>
+            <Text style={styles.value}>{transcript.student.studentId}</Text>
+          </View>
+          <View style={{ flex: 4 }}></View>
+        </View>
+
+        {/* School Info Row */}
+        <View style={styles.studentInfoRow}>
+          <View style={{ flex: 4 }}>
+            <Text style={styles.label}>SCHOOL NAME</Text>
+            <Text style={styles.value}>{transcript.student.schoolName}</Text>
+          </View>
+          <View style={{ flex: 8 }}></View>
+        </View>
+
+        {/* School Address */}
+        <View style={styles.studentInfoRow}>
+          <View style={{ flex: 6 }}>
+            <Text style={styles.label}>SCHOOL ADDRESS</Text>
+            <Text style={styles.value}>{transcript.student.schoolAddress}</Text>
+          </View>
+          <View style={{ flex: 6 }}></View>
+        </View>
+
+        {/* Academic Record Header */}
+        <View style={styles.academicRecordHeader}>
+          <Text>ACADEMIC RECORD</Text>
+        </View>
+
+        {/* Course Table */}
+        <View style={styles.table}>
+          <View style={[styles.tableRow, styles.tableHeader]}>
+            <Text style={styles.courseTitle}>Course Title</Text>
+            <Text style={styles.credits}>Credits</Text>
+            <Text style={styles.grade}>Grade</Text>
+          </View>
+          {transcript.units.map((unit, index) => (
+            <View key={index} style={styles.tableRow}>
+              <Text style={styles.courseTitle}>{unit.name}</Text>
+              <Text style={styles.credits}>{unit.creditHours}</Text>
+              <Text style={styles.grade}>{unit.grade}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Academic Summary and Grading Scale */}
+        <View style={styles.academicSummaryContainer}>
+          <View style={styles.academicSummary}>
+            <Text style={styles.sectionTitle}>ACADEMIC SUMMARY</Text>
+            <View style={styles.summaryRow}>
+              <Text style={styles.label}>GPA</Text>
+              <Text>{transcript.gpa.toFixed(2)}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.label}>Credits Earned</Text>
+              <Text>{transcript.totalCreditHours}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.gradingScale}>
+            <Text style={styles.sectionTitle}>GRADING SCALE</Text>
+            {gradingScale.map((item, index) => (
+              <View key={index} style={styles.scaleRow}>
+                <Text>{item.range}</Text>
+                <Text>= {item.grade}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Principal's Signature */}
+        <View style={styles.signatureContainer}>
+          <View style={styles.signatureColumn}>
+            <Text style={styles.signatureLabel}>SCHOOL PRINCIPAL'S SIGNATURE</Text>
+            <Text style={styles.signature}>{transcript.student.principalName}</Text>
+          </View>
+          <View style={styles.signatureColumn}></View>
+          <View style={styles.signatureColumn}>
+            <Text style={styles.signatureLabel}>Date:</Text>
+            <Text style={styles.signature}></Text>
+          </View>
+        </View>
       </View>
     </Page>
   </Document>

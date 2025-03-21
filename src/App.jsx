@@ -12,6 +12,7 @@ import RootLayout from './components/layouts/RootLayout';
 import { Toaster } from '@/components/ui/toaster';
 import AcademicHistoryPage from '@/pages/transcripts/history';
 import TranscriptsLayout from './components/layouts/TranscriptsLayout';
+import TranscriptGenerator from './pages/TranscriptGenerator';
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -58,6 +59,10 @@ const router = createBrowserRouter([
             element: <AcademicHistoryPage />,
           },
         ],
+      },
+      {
+        path: 'records',
+        element: <TranscriptGenerator />,
       },
     ],
   },

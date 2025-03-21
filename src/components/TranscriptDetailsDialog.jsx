@@ -36,7 +36,7 @@ export function TranscriptDetailsDialog({ transcript, open, onOpenChange }) {
               {({ loading }) => (
                 <Button variant="outline" className="gap-2" disabled={loading}>
                   <Download className="h-4 w-4" />
-                  {loading ? 'Generating PDF...' : 'Download PDF'}
+                  {loading ? 'Generating PDF...' : 'Download Transcript'}
                 </Button>
               )}
             </PDFDownloadLink>
