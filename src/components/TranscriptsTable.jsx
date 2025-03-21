@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -10,15 +10,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Eye, FileEdit, Trash2, GraduationCap } from 'lucide-react';
-import { getTranscripts, deleteTranscript } from '@/lib/services/transcript-service';
-import { TranscriptDetailsDialog } from './TranscriptDetailsDialog';
-import { DeleteTranscriptDialog } from './DeleteTranscriptDialog';
-import { TranscriptsEmptyState } from './EmptyState';
-import { Badge } from '@/components/ui/badge';
-import { AcademicHistoryDialog } from './AcademicHistoryDialog';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Eye, FileEdit, Trash2, GraduationCap, Download } from "lucide-react";
+import {
+  getTranscripts,
+  deleteTranscript,
+} from "@/lib/services/transcript-service";
+import { TranscriptDetailsDialog } from "./TranscriptDetailsDialog";
+import { DeleteTranscriptDialog } from "./DeleteTranscriptDialog";
+import { TranscriptsEmptyState } from "./EmptyState";
+import { Badge } from "@/components/ui/badge";
+import { AcademicHistoryDialog } from "./AcademicHistoryDialog";
 
 export function TranscriptsTable() {
   const [selectedTranscript, setSelectedTranscript] = useState(null);
@@ -29,23 +32,27 @@ export function TranscriptsTable() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: transcripts, isLoading, error } = useQuery({
-    queryKey: ['transcripts'],
+  const {
+    data: transcripts,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["transcripts"],
     queryFn: getTranscripts,
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteTranscript,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transcripts'] });
-      toast.success('Transcript deleted successfully', {
-        description: 'The transcript has been permanently removed.',
+      queryClient.invalidateQueries({ queryKey: ["transcripts"] });
+      toast.success("Transcript deleted successfully", {
+        description: "The transcript has been permanently removed.",
       });
       setDeleteDialogOpen(false);
       setTranscriptToDelete(null);
     },
     onError: (error) => {
-      toast.error('Failed to delete transcript', {
+      toast.error("Failed to delete transcript", {
         description: error.message,
       });
     },
@@ -134,30 +141,37 @@ export function TranscriptsTable() {
                 </TableCell>
                 <TableCell className="text-right">
                   {transcript.createdAt
-                    ? format(transcript.createdAt, 'MMM d, yyyy')
-                    : 'N/A'}
+                    ? format(transcript.createdAt, "MMM d, yyyy")
+                    : "N/A"}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
                       onClick={() => handleViewTranscript(transcript)}
                     >
-                      <Eye className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
+                      Download Transcript
                     </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link to={`/transcripts/${transcript.id}/edit`}>
-                        <FileEdit className="h-4 w-4" />
-                      </Link>
+                    <Link to={`/transcripts/${transcript.id}/edit`}>
+
+                    <Button variant="outline" size="sm" className="gap-2">
+                        <FileEdit className="h-4 w-4" /> 
+                      Edit Transcript
                     </Button>
+                    </Link>
+
                     <Button
                       variant="outline"
                       size="sm"
                       className="gap-2"
-                      onClick={() => handleViewHistory(transcript.student.studentId)}
+                      onClick={() =>
+                        handleViewHistory(transcript.student.studentId)
+                      }
                     >
-                      <GraduationCap className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                       Academic History
                     </Button>
                     <Button
@@ -195,4 +209,4 @@ export function TranscriptsTable() {
       />
     </>
   );
-} 
+}
