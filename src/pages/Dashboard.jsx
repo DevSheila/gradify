@@ -23,7 +23,7 @@ const Dashboard = () => {
 
       <div>
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-semibold tracking-tight">Recent Transcripts</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Student Transcripts</h2>
           <Button asChild>
             <Link to="/transcripts/new" className="flex items-center gap-2">
               <PlusCircle className="w-4 h-4" />
