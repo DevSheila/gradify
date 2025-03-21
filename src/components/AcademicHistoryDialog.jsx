@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Download } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import { FileEdit, Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -16,193 +16,155 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getStudentAcademicHistory } from '@/lib/services/transcript-service';
-import AcademicHistoryPDF from './AcademicHistoryPDF';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
-  const { data: academicHistory, isLoading, error } = useQuery({
-    queryKey: ['academicHistory', studentId],
+  const navigate = useNavigate();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['academic-history', studentId],
     queryFn: () => getStudentAcademicHistory(studentId),
     enabled: !!studentId && open,
   });
 
-  if (!studentId || isLoading) {
+  if (!open) return null;
+
+  if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <div className="flex items-center justify-center h-40">
-            <p className="text-muted-foreground">Loading academic history...</p>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (error || !academicHistory) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <div className="flex items-center justify-center h-40">
-            <p className="text-destructive">
-              {error ? `Error loading academic history: ${error.message}` : 'No academic history found'}
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const sortedYears = Object.entries(academicHistory.transcripts || {})
-    .sort(([yearA], [yearB]) => yearB.localeCompare(yearA));
-
-  if (sortedYears.length === 0) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Academic History</DialogTitle>
           </DialogHeader>
-          <div className="flex items-center justify-center h-40">
-            <p className="text-muted-foreground">No academic records found</p>
+          <div className="space-y-4">
+            <Skeleton className="h-[200px] w-full" />
           </div>
         </DialogContent>
       </Dialog>
     );
   }
 
-  // Get the latest transcript for student information
-  const latestYear = sortedYears[0];
-  const latestTranscript = latestYear[1][0];
+  const years = Object.keys(data?.transcripts || {}).sort((a, b) => b.localeCompare(a));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>Academic History</DialogTitle>
-            {academicHistory && (
-              <PDFDownloadLink
-                document={<AcademicHistoryPDF academicHistory={academicHistory} />}
-                fileName={`academic-history-${studentId}.pdf`}
-              >
-                {({ loading }) => (
-                  <Button variant="outline" className="gap-2" disabled={loading}>
-                    <Download className="h-4 w-4" />
-                    {loading ? 'Generating PDF...' : 'Download PDF'}
-                  </Button>
-                )}
-              </PDFDownloadLink>
-            )}
-          </div>
+          <DialogTitle>Academic History</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Student Information */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Student Information</h3>
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Full Name</p>
-                  <p className="font-medium">{latestTranscript?.student?.fullName || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Student ID</p>
-                  <p className="font-medium">{studentId}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Current Grade Level</p>
-                  <Badge variant="outline" className="mt-1">
-                    {latestTranscript?.student?.gradeLevel || 'N/A'}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Current School</p>
-                  <p className="font-medium">{latestTranscript?.student?.schoolName || 'N/A'}</p>
-                </div>
+        {/* Academic Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Academic Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Cumulative GPA</p>
+                <p className="text-2xl font-bold">{data?.summary.cumulativeGPA}</p>
               </div>
-            </Card>
-          </div>
-
-          {/* Academic Records by Year */}
-          {sortedYears.map(([year, transcripts]) => (
-            <div key={year} className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Academic Year {year}</h3>
-                <Badge variant="outline">
-                  {transcripts[0]?.student?.gradeLevel || 'N/A'}
-                </Badge>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Credits</p>
+                <p className="text-2xl font-bold">{data?.summary.totalCredits}</p>
               </div>
-              
-              {transcripts.map((transcript, index) => (
-                <Card key={`${year}-${index}`} className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium">{transcript.student?.schoolName || 'N/A'}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Created on {transcript.createdAt ? format(transcript.createdAt, 'MMM d, yyyy') : 'N/A'}
-                        </p>
-                      </div>
-                      <Badge>GPA: {transcript.gpa?.toFixed(2) || 'N/A'}</Badge>
-                    </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Years Completed</p>
+                <p className="text-2xl font-bold">{data?.summary.yearsCompleted}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
+        {/* Transcripts by Year */}
+        <Tabs defaultValue={years[0]} className="w-full">
+          <TabsList className="w-full justify-start">
+            {years.map((year) => (
+              <TabsTrigger key={year} value={year}>
+                {year}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {years.map((year) => (
+            <TabsContent key={year} value={year}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Academic Year {year}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Unit Code</TableHead>
-                          <TableHead>Unit Name</TableHead>
-                          <TableHead className="text-right">Grade</TableHead>
-                          <TableHead className="text-right">Credit Hours</TableHead>
+                          <TableHead>School</TableHead>
+                          <TableHead>Grade Level</TableHead>
+                          <TableHead className="text-center">GPA</TableHead>
+                          <TableHead className="text-center">Credits</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {transcript.units?.map((unit, unitIndex) => (
-                          <TableRow key={unitIndex}>
-                            <TableCell>{unit.code}</TableCell>
-                            <TableCell>{unit.name}</TableCell>
-                            <TableCell className="text-right">{unit.grade}</TableCell>
-                            <TableCell className="text-right">{unit.creditHours}</TableCell>
+                        {data?.transcripts[year].map((transcript) => (
+                          <TableRow key={transcript.id}>
+                            <TableCell>{transcript.student?.schoolName || 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {transcript.student?.gradeLevel || 'N/A'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant={
+                                transcript.gpa >= 3.5 ? 'default' :
+                                transcript.gpa >= 3.0 ? 'secondary' :
+                                transcript.gpa >= 2.0 ? 'outline' :
+                                'destructive'
+                              }>
+                                {transcript.gpa?.toFixed(2) || 'N/A'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {transcript.totalCreditHours || 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              {transcript.createdAt ? format(transcript.createdAt, 'MMM d, yyyy') : 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => navigate(`/transcripts/${transcript.id}/edit`)}
+                                  className="h-8 w-8"
+                                  title="Edit transcript"
+                                >
+                                  <FileEdit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  title="Download transcript"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
                           </TableRow>
                         ))}
-                        <TableRow>
-                          <TableCell colSpan={2} className="font-medium">Total Credit Hours</TableCell>
-                          <TableCell colSpan={2} className="text-right font-medium">
-                            {transcript.totalCreditHours}
-                          </TableCell>
-                        </TableRow>
                       </TableBody>
                     </Table>
                   </div>
-                </Card>
-              ))}
-            </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           ))}
-
-          {/* Academic Summary */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Academic Summary</h3>
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Cumulative GPA</p>
-                  <p className="font-medium">{academicHistory.summary.cumulativeGPA}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Credits Earned</p>
-                  <p className="font-medium">{academicHistory.summary.totalCredits}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Years Completed</p>
-                  <p className="font-medium">{academicHistory.summary.yearsCompleted}</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

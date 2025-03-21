@@ -1,82 +1,45 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ClerkProvider } from '@clerk/clerk-react';
-import { ThemeProvider } from './components/theme-provider';
-import TranscriptsPage from '@/pages/transcripts';
-import NewTranscriptPage from '@/pages/transcripts/new';
-import EditTranscriptPage from '@/pages/transcripts/edit';
-import LandingPage from './pages/LandingPage';
-import Dashboard from './pages/Dashboard';
-import ProtectedRoute from './components/ProtectedRoute';
-import RootLayout from './components/layouts/RootLayout';
-import { Toaster } from '@/components/ui/toaster';
-import AcademicHistoryPage from '@/pages/transcripts/history';
-import TranscriptsLayout from './components/layouts/TranscriptsLayout';
-import TranscriptGenerator from './pages/TranscriptGenerator';
-
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ClerkProvider } from "@clerk/clerk-react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
+import MainLayout from "@/components/layouts/MainLayout";
+import StudentsPage from "@/pages/students";
+import CreateStudentPage from "@/pages/students/create";
+import StudentDetailsPage from "@/pages/students/details";
+import CreateTranscriptPage from "@/pages/students/transcripts/create";
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
 const queryClient = new QueryClient();
 
-const router = createBrowserRouter([
-  {
-    element: <RootLayout />,
-    children: [
-      {
-        index: true,
-        element: <LandingPage />,
-      },
-      {
-        path: 'dashboard',
-        element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'transcripts',
-        element: (
-          <ProtectedRoute>
-            <TranscriptsLayout />
-          </ProtectedRoute>
-        ),
-        children: [
-          {
-            index: true,
-            element: <TranscriptsPage />,
-          },
-          {
-            path: 'new',
-            element: <NewTranscriptPage />,
-          },
-          {
-            path: ':id/edit',
-            element: <EditTranscriptPage />,
-          },
-          {
-            path: 'history',
-            element: <AcademicHistoryPage />,
-          },
-        ],
-      },
-      {
-        path: 'records',
-        element: <TranscriptGenerator />,
-      },
-    ],
-  },
-]);
-
-export default function App() {
+function App() {
   return (
     <ClerkProvider publishableKey={clerkPubKey}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
+          <Router>
+            <MainLayout>
+              <Routes>
+                {/* Redirect root to students page */}
+                <Route path="/" element={<Navigate to="/students" replace />} />
+
+                {/* Students routes */}
+                <Route path="/students" element={<StudentsPage />} />
+                <Route path="/students/create" element={<CreateStudentPage />} />
+                
+                {/* Student details and transcript routes */}
+                <Route path="/students/:id" element={<StudentDetailsPage />} />
+                <Route path="/students/:id/create-transcript" element={<CreateTranscriptPage />} />
+
+                {/* 404 route */}
+                <Route path="*" element={<Navigate to="/students" replace />} />
+              </Routes>
+            </MainLayout>
+          </Router>
           <Toaster />
         </QueryClientProvider>
       </ThemeProvider>
     </ClerkProvider>
   );
 }
+
+export default App;

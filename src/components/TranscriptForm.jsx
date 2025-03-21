@@ -1,6 +1,6 @@
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -19,7 +19,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { transcriptSchema, gradeEnum, genderEnum, gradeLevelEnum } from '@/lib/validations/transcript';
+import { useState, useEffect } from 'react';
+import { calculateGPA } from '@/lib/utils/gpa-calculator';
 
 const defaultUnit = {
   code: '',
@@ -34,6 +46,10 @@ export function TranscriptForm({
   isSubmitting = false,
   submitText = 'Create Transcript',
 }) {
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [formData, setFormData] = useState(null);
+  const [currentGPA, setCurrentGPA] = useState({ gpa: 0, totalCreditHours: 0 });
+
   const form = useForm({
     resolver: zodResolver(transcriptSchema),
     defaultValues: defaultValues || {
@@ -55,180 +71,45 @@ export function TranscriptForm({
     name: 'units',
   });
 
+  // Watch units for real-time GPA calculation
+  const watchedUnits = form.watch('units');
+
+  useEffect(() => {
+    const { gpa, totalCreditHours } = calculateGPA(watchedUnits);
+    setCurrentGPA({ gpa, totalCreditHours });
+  }, [watchedUnits]);
+
   const handleSubmit = async (data) => {
-    if (typeof onSubmit === 'function') {
-      await onSubmit(data);
+    setFormData(data);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (typeof onSubmit === 'function' && formData) {
+      await onSubmit(formData);
     } else {
       console.error('onSubmit prop is not a function');
     }
+    setConfirmDialogOpen(false);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        {/* Student Information */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Student Information</h2>
-          <div className="grid gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="student.fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="student.studentId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Student ID</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., 2024001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="student.gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(genderEnum).map((gender) => (
-                          <SelectItem key={gender} value={gender}>
-                            {gender}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="student.gradeLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grade Level</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select grade level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(gradeLevelEnum).map((level) => (
-                          <SelectItem key={level} value={level}>
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="student.schoolName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>School Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter school name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="student.schoolAddress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>School Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter school address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="student.year"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Academic Year</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 2024" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </Card>
-
-        {/* Units */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Units</h2>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => append(defaultUnit)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Unit
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start"
-              >
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+          {/* Student Information */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Student Information</h2>
+            <div className="grid gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name={`units.${index}.code`}
+                  name="student.fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unit Code</FormLabel>
+                      <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., MATH101" {...field} />
+                        <Input placeholder="John Doe" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -236,36 +117,39 @@ export function TranscriptForm({
                 />
                 <FormField
                   control={form.control}
-                  name={`units.${index}.name`}
+                  name="student.studentId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unit Name</FormLabel>
+                      <FormLabel>Student ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Mathematics" {...field} />
+                        <Input placeholder="e.g., 2024001" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name={`units.${index}.grade`}
+                  name="student.gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Grade</FormLabel>
+                      <FormLabel>Gender</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select grade" />
+                            <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.values(gradeEnum).map((grade) => (
-                            <SelectItem key={grade} value={grade}>
-                              {grade}
+                          {Object.values(genderEnum).map((gender) => (
+                            <SelectItem key={gender} value={gender}>
+                              {gender}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -274,47 +158,230 @@ export function TranscriptForm({
                     </FormItem>
                   )}
                 />
-                <div className="flex items-end gap-2">
+                <FormField
+                  control={form.control}
+                  name="student.gradeLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Grade Level</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select grade level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.values(gradeLevelEnum).map((level) => (
+                            <SelectItem key={level} value={level}>
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="student.schoolName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>School Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter school name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="student.schoolAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>School Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter school address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="student.year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Academic Year</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 2024" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
+
+          {/* Units */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Units</h2>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => append(defaultUnit)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Unit
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start"
+                >
                   <FormField
                     control={form.control}
-                    name={`units.${index}.creditHours`}
+                    name={`units.${index}.code`}
                     render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>Credit Hours</FormLabel>
+                      <FormItem>
+                        <FormLabel>Unit Code</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="e.g., 3"
-                            {...field}
-                          />
+                          <Input placeholder="e.g., MATH101" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="self-end"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
+                  <FormField
+                    control={form.control}
+                    name={`units.${index}.name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Mathematics" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`units.${index}.grade`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grade</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select grade" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.values(gradeEnum).map((grade) => (
+                              <SelectItem key={grade} value={grade}>
+                                {grade}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex items-end gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`units.${index}.creditHours`}
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Credit Hours</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 3"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="self-end"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+              ))}
+            </div>
+          </Card>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitText}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          {/* GPA Summary */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Academic Summary</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Current GPA</p>
+                <p className="text-2xl font-bold">{currentGPA.gpa.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Credit Hours</p>
+                <p className="text-2xl font-bold">{currentGPA.totalCreditHours}</p>
+              </div>
+            </div>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting} className="gap-2">
+              <Save className="h-4 w-4" />
+              {isSubmitting ? 'Saving...' : submitText}
+            </Button>
+          </div>
+        </form>
+      </Form>
+
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to save these changes? This will update the student's academic record.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button onClick={handleConfirmSubmit} disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 } 
