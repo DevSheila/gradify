@@ -71,6 +71,20 @@ export const calculateGPA = (units) => {
   };
 };
 
+export const gradeLevels = {
+  9: '9th Grade',
+  10: '10th Grade',
+  11: '11th Grade',
+  12: '12th Grade'
+};
+
+export const academicYears = [
+  '2022-2023',
+  '2023-2024',
+  '2024-2025',
+  '2025-2026'
+];
+
 export const transcriptSchema = z.object({
   student: z.object({
     fullName: z.string().min(3, 'Full name must be at least 3 characters'),
@@ -85,6 +99,8 @@ export const transcriptSchema = z.object({
     }),
     year: z.string().min(4, 'Year must be at least 4 characters'),
   }),
+  gradeLevel: z.number().min(9).max(12, 'Please select a valid grade level (9-12)'),
+  academicYear: z.string().regex(/^\d{4}-\d{4}$/, 'Academic year must be in format YYYY-YYYY'),
   units: z
     .array(
       z.object({

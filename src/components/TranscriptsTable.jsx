@@ -21,15 +21,12 @@ import { TranscriptDetailsDialog } from "./TranscriptDetailsDialog";
 import { DeleteTranscriptDialog } from "./DeleteTranscriptDialog";
 import { TranscriptsEmptyState } from "./EmptyState";
 import { Badge } from "@/components/ui/badge";
-import { AcademicHistoryDialog } from "./AcademicHistoryDialog";
 
 export function TranscriptsTable() {
   const [selectedTranscript, setSelectedTranscript] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transcriptToDelete, setTranscriptToDelete] = useState(null);
-  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
   const queryClient = useQueryClient();
 
   const {
@@ -61,11 +58,6 @@ export function TranscriptsTable() {
   const handleViewTranscript = (transcript) => {
     setSelectedTranscript(transcript);
     setDialogOpen(true);
-  };
-
-  const handleViewHistory = (studentId) => {
-    setSelectedStudentId(studentId);
-    setHistoryDialogOpen(true);
   };
 
   const handleDeleteClick = (transcript) => {
@@ -105,100 +97,82 @@ export function TranscriptsTable() {
   }
 
   return (
-    <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Student Name</TableHead>
-              <TableHead>Student ID</TableHead>
-              <TableHead>Grade Level</TableHead>
-              <TableHead>School Name</TableHead>
-              <TableHead className="text-right">GPA</TableHead>
-              <TableHead className="text-right">Credit Hours</TableHead>
-              <TableHead className="text-right">Created At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transcripts.map((transcript) => (
-              <TableRow key={transcript.id}>
-                <TableCell className="font-medium">
-                  {transcript.student.fullName}
-                </TableCell>
-                <TableCell>{transcript.student.studentId}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {transcript.student.gradeLevel}
-                  </Badge>
-                </TableCell>
-                <TableCell>{transcript.student.schoolName}</TableCell>
-                <TableCell className="text-right">
-                  {transcript.gpa.toFixed(2)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {transcript.totalCreditHours}
-                </TableCell>
-                <TableCell className="text-right">
-                  {transcript.createdAt
-                    ? format(transcript.createdAt, "MMM d, yyyy")
-                    : "N/A"}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => handleViewTranscript(transcript)}
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Transcript
-                    </Button>
-                    <Link to={`/transcripts/${transcript.id}/edit`}>
-
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Student Name</TableHead>
+            <TableHead>School</TableHead>
+            <TableHead>Grade Level</TableHead>
+            <TableHead>Academic Year</TableHead>
+            <TableHead>GPA</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transcripts.map((transcript) => (
+            <TableRow key={transcript.id}>
+              <TableCell className="font-medium">
+                {transcript.student.fullName}
+              </TableCell>
+              <TableCell>{transcript.student.schoolName}</TableCell>
+              <TableCell>
+                <Badge variant="secondary">
+                  {transcript.student.gradeLevel}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">
+                  {transcript.student.year}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">{transcript.gpa.toFixed(2)}</Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => handleViewTranscript(transcript)}
+                  >
+                    <Eye className="h-4 w-4" />
+                    View Details
+                  </Button>
+                  <Link to={`/transcripts/${transcript.id}/edit`}>
                     <Button variant="outline" size="sm" className="gap-2">
-                        <FileEdit className="h-4 w-4" /> 
-                      Edit Transcript
+                      <FileEdit className="h-4 w-4" /> 
+                      Edit
                     </Button>
-                    </Link>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() =>
-                        handleViewHistory(transcript.student.studentId)
-                      }
-                    >
-                      <Download className="h-4 w-4" />
-                      Academic History
+                  </Link>
+                  <Link 
+                    to={`/transcripts/history?studentId=${transcript.student.studentId}`}
+                    className="inline-flex"
+                  >
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      History
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(transcript)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteClick(transcript)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       <TranscriptDetailsDialog
         transcript={selectedTranscript}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-      />
-
-      <AcademicHistoryDialog
-        studentId={selectedStudentId}
-        open={historyDialogOpen}
-        onOpenChange={setHistoryDialogOpen}
       />
 
       <DeleteTranscriptDialog
@@ -207,6 +181,6 @@ export function TranscriptsTable() {
         onConfirm={handleDeleteConfirm}
         isDeleting={deleteMutation.isPending}
       />
-    </>
+    </div>
   );
 }
