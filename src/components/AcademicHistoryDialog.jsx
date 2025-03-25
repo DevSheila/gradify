@@ -21,6 +21,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getStudentAcademicHistory } from '@/lib/services/transcript-service';
 import AcademicHistoryPDF from './AcademicHistoryPDF';
+import TranscriptGenerator from '@/pages/TranscriptGenerator';
 
 export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
   const { data: academicHistory, isLoading, error } = useQuery({
@@ -74,7 +75,7 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
   }
 
   // Get the latest transcript for student information
-  const latestYear = sortedYears[0];
+  const latestYear = sortedYears[0]; 
   const latestTranscript = latestYear[1][0];
 
   return (
@@ -84,17 +85,29 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
           <div className="flex items-center justify-between">
             <DialogTitle>Academic History</DialogTitle>
             {academicHistory && (
+              // <PDFDownloadLink
+              //   document={<AcademicHistoryPDF academicHistory={academicHistory} />}
+              //   fileName={`academic-history-${studentId}.pdf`}
+              // >
+              //   {({ loading }) => (
+              //     <Button variant="outline" className="gap-2" disabled={loading}>
+              //       <Download className="h-4 w-4" />
+              //       {loading ? 'Generating PDF...' : 'Download Academic History'}
+              //     </Button>
+              //   )}
+              // </PDFDownloadLink>
+
               <PDFDownloadLink
-                document={<AcademicHistoryPDF academicHistory={academicHistory} />}
-                fileName={`academic-history-${studentId}.pdf`}
-              >
-                {({ loading }) => (
-                  <Button variant="outline" className="gap-2" disabled={loading}>
-                    <Download className="h-4 w-4" />
-                    {loading ? 'Generating PDF...' : 'Download Academic History'}
-                  </Button>
-                )}
-              </PDFDownloadLink>
+              document={<TranscriptGenerator academicHistory={academicHistory} />}
+              fileName={`academic-history-${studentId}.pdf`}
+            >
+              {({ loading }) => (
+                <Button variant="outline" className="gap-2" disabled={loading}>
+                  <Download className="h-4 w-4" />
+                  {loading ? 'Generating PDF...' : 'Download Academic History'}
+                </Button>
+              )}
+            </PDFDownloadLink>
             )}
           </div>
         </DialogHeader>

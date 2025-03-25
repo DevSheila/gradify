@@ -1,747 +1,704 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { pdf, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-import { saveAs } from 'file-saver';
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  pdf,
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
+  Svg,
+  Path,
+  Circle,
+  G,
+  Image,
+} from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
 
-// Register a standard font
+// Register fonts - using monospace fonts to match the typewriter style in the original
 Font.register({
-  family: 'Times-Roman',
-  src: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf'
+  family: "Courier",
+  src: "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf",
+});
+
+Font.register({
+  family: "Courier-Bold",
+  src: "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Bold.ttf",
 });
 
 // Create styles for PDF
 const styles = StyleSheet.create({
   page: {
-    padding: 35,
-    fontFamily: 'Times-Roman',
+    padding: 0,
+    fontFamily: "Courier",
+    position: "relative",
+    backgroundColor: "white",
+  },
+  blueBorder: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderWidth: 20,
+    borderColor: "#0c3b87", // Darker blue to match image
+    zIndex: 1,
+  },
+  securityText: {
+    position: "absolute",
+    top: 5,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    color: "white",
+    fontSize: 8,
+    fontFamily: "Courier-Bold",
+    transform: "rotate(180deg)",
+    zIndex: 2,
+  },
+  securityTextBottom: {
+    position: "absolute",
+    bottom: 5,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    color: "white",
+    fontSize: 8,
+    fontFamily: "Courier-Bold",
+    zIndex: 2,
+  },
+  securityTextLeft: {
+    position: "absolute",
+    top: "50%",
+    left: -55,
+    color: "white",
+    fontSize: 8,
+    fontFamily: "Courier-Bold",
+    transform: "rotate(90deg)",
+    zIndex: 2,
+  },
+  securityTextRight: {
+    position: "absolute",
+    top: "50%",
+    right: -55,
+    color: "white",
+    fontSize: 8,
+    fontFamily: "Courier-Bold",
+    transform: "rotate(-90deg)",
+    zIndex: 2,
   },
   container: {
-    border: '1pt solid #777',
+    margin: 30,
+    backgroundColor: "white", // White background to match image
+    borderRadius: 10,
+    overflow: "hidden",
+    zIndex: 3,
+    position: "relative",
+  },
+  watermark: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%) rotate(-45deg)",
+    opacity: 0.08,
+    zIndex: 0,
+    textAlign: "center",
+    fontSize: 60,
+    color: "#888888",
+    fontFamily: "Courier-Bold",
+  },
+  repeatingWatermark: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  smallWatermark: {
+    fontSize: 20,
+    color: "#888888",
+    opacity: 0.05,
+    fontFamily: "Courier-Bold",
+  },
+  universityLogoWatermark: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    opacity: 0.05,
+    zIndex: -10,
+    width: 300,
+    height: 300,
+  },
+  pageNumber: {
+    position: "absolute",
+    top: 30,
+    right: 30,
+    fontSize: 10,
+    fontFamily: "Courier",
+    zIndex: 5,
+  },
+  contentContainer: {
+    backgroundColor: "white",
+    margin: 10,
+    borderRadius: 5,
+    overflow: "hidden",
+    zIndex: 4,
+    position: "relative",
   },
   header: {
-    borderBottom: '1pt solid #777',
-    padding: 10,
-    textAlign: 'center',
+    padding: 15,
+    borderBottom: "1pt solid #cccccc",
+  },
+  schoolInfo: {
+    marginBottom: 5,
   },
   schoolName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#444',
+    fontFamily: "Courier-Bold",
+    marginBottom: 2,
+    color: "#c41e3a", // University red color to match image
   },
-  subHeader: {
+  schoolAddress: {
     fontSize: 10,
-    color: '#555',
-    marginTop: 3,
+    marginBottom: 2,
+    color: "#c41e3a", // University red color to match image
+  },
+  studentInfoBox: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 240,
+    padding: 5,
   },
   studentInfoRow: {
-    flexDirection: 'row',
-    borderBottom: '1pt solid #777',
-    padding: 8,
-    fontSize: 9,
-  },
-  academicRecordHeader: {
-    borderBottom: '1pt solid #777',
-    padding: 8,
-    textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  academicYearsContainer: {
-    borderBottom: '1pt solid #777',
-  },
-  academicYearRow: {
-    flexDirection: 'row',
-  },
-  yearColumn: {
-    width: '50%',
-    padding: 8,
-    fontSize: 9,
-  },
-  yearHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
-  },
-  yearHeaderLabel: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     fontSize: 8,
-    color: '#666',
+    marginBottom: 2,
   },
-  courseTable: {
-    width: '100%',
+  logoContainer: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 50,
+    height: 50,
+    zIndex: 4,
+  },
+  tableContainer: {
+    marginTop: 10,
+    marginHorizontal: 15,
+    marginBottom: 10,
   },
   tableHeader: {
-    flexDirection: 'row',
-    borderBottom: '0.5pt solid #ddd',
-    paddingBottom: 2,
-    marginBottom: 3,
+    flexDirection: "row",
+    borderTop: "1pt solid #000",
+    borderBottom: "1pt solid #000",
+    borderLeft: "1pt solid #000",
+    borderRight: "1pt solid #000",
     fontSize: 8,
-    fontWeight: 'bold',
+    fontFamily: "Courier-Bold",
+    backgroundColor: "#f8f9fa",
+  },
+  deptCol: {
+    width: "8%",
+    textAlign: "left",
+    padding: 3,
+    borderRight: "1pt solid #000",
+  },
+  courseNoCol: {
+    width: "12%",
+    textAlign: "left",
+    padding: 3,
+    borderRight: "1pt solid #000",
+  },
+  titleCol: {
+    width: "40%",
+    padding: 3,
+    borderRight: "1pt solid #000",
+  },
+  unitsAttemptedCol: {
+    width: "10%",
+    textAlign: "center",
+    padding: 3,
+    borderRight: "1pt solid #000",
+  },
+  unitsEarnedCol: {
+    width: "10%",
+    textAlign: "center",
+    padding: 3,
+    borderRight: "1pt solid #000",
+  },
+  gradeCol: {
+    width: "10%",
+    textAlign: "center",
+    padding: 3,
+    borderRight: "1pt solid #000",
+  },
+  gradePointsCol: {
+    width: "10%",
+    textAlign: "center",
+    padding: 3,
+  },
+  academicHeader: {
+    textAlign: "center",
+    marginTop: 10,
+    marginBottom: 5,
+    fontFamily: "Courier-Bold",
+    fontSize: 10,
+  },
+  termHeader: {
+    fontSize: 9,
+    fontFamily: "Courier-Bold",
+    marginTop: 5,
+    marginBottom: 2,
   },
   courseRow: {
-    flexDirection: 'row',
-    marginVertical: 1,
+    flexDirection: "row",
     fontSize: 8,
   },
-  courseTitle: {
-    flex: 6,
+  courseCell: {
+    padding: 2,
   },
-  credits: {
-    flex: 2,
-    textAlign: 'center',
-  },
-  grade: {
-    flex: 2,
-    textAlign: 'center',
-  },
-  yearFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
-    paddingTop: 3,
+  totalRow: {
+    flexDirection: "row",
     fontSize: 8,
-  },
-  academicSummaryContainer: {
-    flexDirection: 'row',
-    borderBottom: '1pt solid #777',
-  },
-  academicSummary: {
-    width: '67%',
-    borderRight: '1pt solid #777',
-    padding: 8,
-  },
-  gradingScale: {
-    width: '33%',
-    padding: 8,
-  },
-  sectionTitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
+    fontFamily: "Courier-Bold",
+    marginTop: 2,
     marginBottom: 5,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    marginVertical: 2,
-  },
-  scaleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    marginVertical: 2,
+  footerContainer: {
+    marginHorizontal: 15,
+    marginBottom: 10,
   },
   signatureContainer: {
-    flexDirection: 'row',
-    padding: 8,
-    fontSize: 9,
+    flexDirection: "row",
+    borderTop: "1pt solid #000",
+    borderLeft: "1pt solid #000",
+    borderRight: "1pt solid #000",
+    borderBottom: "1pt solid #000",
+    padding: 10,
+    backgroundColor: "white",
+    marginTop: 20,
   },
-  signatureColumn: {
-    flex: 1,
+  signatureLeft: {
+    width: "70%",
+  },
+  signatureRight: {
+    width: "30%",
+    alignItems: "center",
   },
   signatureLabel: {
     fontSize: 8,
-    color: '#666',
+    marginBottom: 20,
+  },
+  signatureLine: {
+    width: 150,
+    borderBottom: "0.5pt solid #000",
+    position: "relative",
+  },
+  officialSealContainer: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 80,
+    height: 80,
+    zIndex: 5,
+  },
+  issuedToStudent: {
+    // position: "absolute",
+    // bottom: 70,
+    // left: 15,
+    color: "#c41e3a", // University red color
+    fontSize: 14,
+    fontFamily: "Courier-Bold",
+    zIndex: 5,
   },
   signature: {
-    marginTop: 10,
-    fontStyle: 'italic',
+    // position: "absolute",
+    // bottom: 40,
+    // left: 60,
+    zIndex: 5,
   },
-  borderRight: {
-    borderRight: '1pt solid #777',
+  disclaimerContainer: {
+    marginHorizontal: 15,
+    marginBottom: 10,
   },
-  verticalDivider: {
-    borderRight: '1pt solid #777',
-    height: '100%',
+  disclaimerText: {
+    fontSize: 7,
+    fontStyle: "italic",
+    textAlign: "center",
+    backgroundColor: "transparent",
+    padding: 5,
+
   },
-  bordered: {
-    border: '1pt solid #777',
-  },
-  label: {
-    fontSize: 8,
-    color: '#666',
-  },
-  value: {
-    fontSize: 9,
-  },
-  infoSection: {
-    margin: 2,
-  }
 });
 
 // PDF Document component
-const TranscriptDocument = ({ studentInfo, academicYears, gradingScale }) => (
+const TranscriptGenerator = ({ academicHistory }) => {
+
+    // Get the latest transcript for student information
+    const years = Object.keys(academicHistory.transcripts).sort((a, b) => b.localeCompare(a));
+    const latestYear = years[0];
+    const latestTranscript = academicHistory.transcripts[latestYear][0];
+  
+    // Transform transcripts into academic years format and track last valid values
+    let lastValidValues = {
+      gradeLevel: '',
+      schoolName: '',
+      schoolCode: '',
+      schoolAddress: '',
+      schoolPhone: '',
+      principalName: '',
+    };
+  
+    const academicYears = years.map(year => {
+      const yearTranscripts = academicHistory.transcripts[year];
+      const firstTranscript = yearTranscripts[0];
+      
+      // Update last valid values if current values are not N/A
+      if (firstTranscript.student.gradeLevel && firstTranscript.student.gradeLevel !== 'N/A') {
+        lastValidValues.gradeLevel = firstTranscript.student.gradeLevel;
+      }
+      if (firstTranscript.student.schoolName && firstTranscript.student.schoolName !== 'N/A') {
+        lastValidValues.schoolName = firstTranscript.student.schoolName;
+      }
+      if (firstTranscript.student.schoolCode && firstTranscript.student.schoolCode !== 'N/A') {
+        lastValidValues.schoolCode = firstTranscript.student.schoolCode;
+      }
+      if (firstTranscript.student.schoolAddress && firstTranscript.student.schoolAddress !== 'N/A') {
+        lastValidValues.schoolAddress = firstTranscript.student.schoolAddress;
+      }
+      if (firstTranscript.student.schoolPhone && firstTranscript.student.schoolPhone !== 'N/A') {
+        lastValidValues.schoolPhone = firstTranscript.student.schoolPhone;
+      }
+      if (firstTranscript.student.principalName && firstTranscript.student.principalName !== 'N/A') {
+        lastValidValues.principalName = firstTranscript.student.principalName;
+      }
+      
+      return {
+        year,
+        gradeLevel: firstTranscript.student.gradeLevel === 'N/A' ? lastValidValues.gradeLevel : firstTranscript.student.gradeLevel,
+        courses: yearTranscripts.flatMap(transcript => 
+          transcript.units.map(unit => ({
+            title: unit.name,
+            credits: unit.creditHours,
+            grade: unit.grade
+          }))
+        ),
+        totalCredits: yearTranscripts.reduce((sum, t) => sum + t.totalCreditHours, 0),
+        gpa: yearTranscripts[0].gpa.toFixed(2)
+      };
+    });
+  
+    // Prepare student info using last valid values for N/A fields
+    const studentInfo = {
+      name: latestTranscript.student.fullName,
+      gender: latestTranscript.student.gender || 'N/A',
+      studentId: latestTranscript.student.studentId,
+      schoolName: latestTranscript.student.schoolName === 'N/A' ? lastValidValues.schoolName : latestTranscript.student.schoolName,
+      schoolAddress: latestTranscript.student.schoolAddress === 'N/A' ? lastValidValues.schoolAddress : latestTranscript.student.schoolAddress,
+      principalName: latestTranscript.student.principalName === 'N/A' ? lastValidValues.principalName : latestTranscript.student.principalName,
+      cumulativeGPA: academicHistory.summary.cumulativeGPA
+    };
+
+    
+  return (
   <Document>
     <Page size="LETTER" style={styles.page}>
+      {/* Blue Border */}
+      <View style={styles.blueBorder} />
+
+      {/* Main Watermark */}
+      <Text style={styles.watermark}>OFFICIAL TRANSCRIPT</Text>
+
+      {/* Repeating Watermarks */}
+      <View style={styles.repeatingWatermark}>
+        {Array(10)
+          .fill()
+          .map((_, i) => (
+            <View
+              key={i}
+              style={{
+                position: "absolute",
+                top: `${i * 10}%`,
+                left: "10%",
+                transform: "rotate(-45deg)",
+              }}
+            >
+              <Text style={styles.smallWatermark}>OFFICIAL</Text>
+            </View>
+          ))}
+        {Array(10)
+          .fill()
+          .map((_, i) => (
+            <View
+              key={i}
+              style={{
+                position: "absolute",
+                top: `${i * 10}%`,
+                left: "60%",
+                transform: "rotate(-45deg)",
+              }}
+            >
+              <Text style={styles.smallWatermark}>TRANSCRIPT</Text>
+            </View>
+          ))}
+        {Array(10)
+          .fill()
+          .map((_, i) => (
+            <View
+              key={i}
+              style={{
+                position: "absolute",
+                top: `${i * 10 + 5}%`,
+                left: "35%",
+                transform: "rotate(-45deg)",
+              }}
+            >
+              <Text style={styles.smallWatermark}>VERIFIED</Text>
+            </View>
+          ))}
+      </View>
+
+      {/* Security Text on Borders */}
+      <Text style={styles.securityText}>
+        OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+      </Text>
+      <Text style={styles.securityTextBottom}>
+        OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+      </Text>
+      <Text style={styles.securityTextLeft}>
+        OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+      </Text>
+      <Text style={styles.securityTextRight}>
+        OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+      </Text>
+
+      {/* Page Number */}
+      <Text style={styles.pageNumber}>Page 1 of 1</Text>
+
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.schoolName}>{studentInfo.schoolName}</Text>
-          <Text style={styles.subHeader}>OFFICIAL HIGH SCHOOL TRANSCRIPT</Text>
-        </View>
+        <View style={styles.contentContainer}>
+          {/* Header Section */}
+          <View style={styles.header}>
+            <View style={styles.schoolInfo}>
+              <Text style={styles.schoolName}>{studentInfo.schoolName}</Text>
+              <Text style={styles.schoolAddress}>Registrar's Office</Text>
+              <Text style={styles.schoolAddress}>{studentInfo.schoolAddress}</Text>
 
-        {/* Student Info Row 1 */}
-        <View style={styles.studentInfoRow}>
-          <View style={{ flex: 4 }}>
-            <Text style={styles.label}>STUDENT NAME</Text>
-            <Text style={styles.value}>{studentInfo.name}</Text>
-          </View>
-          <View style={{ flex: 2 }}>
-            <Text style={styles.label}>DATE OF BIRTH</Text>
-            <Text style={styles.value}>{studentInfo.dob}</Text>
-          </View>
-          <View style={{ flex: 2 }}>
-            <Text style={styles.label}>GENDER</Text>
-            <Text style={styles.value}>{studentInfo.gender}</Text>
-          </View>
-          <View style={{ flex: 2 }}>
-            <Text style={styles.label}>CLASS OF</Text>
-            <Text style={styles.value}>{studentInfo.classOf}</Text>
-          </View>
-          <View style={{ flex: 2 }}>
-            <Text style={styles.label}>STUDENT ID</Text>
-            <Text style={styles.value}>{studentInfo.studentId}</Text>
-          </View>
-        </View>
+            </View>
 
-        {/* School Info Row */}
-        <View style={styles.studentInfoRow}>
-          <View style={{ flex: 4 }}>
-            <Text style={styles.label}>SCHOOL NAME</Text>
-            <Text style={styles.value}>{studentInfo.schoolName}</Text>
-          </View>
-          <View style={{ flex: 2 }}>
-            <Text style={styles.label}>CEED CODE</Text>
-            <Text style={styles.value}>{studentInfo.ceedCode}</Text>
-          </View>
-          <View style={{ flex: 6 }}></View>
-        </View>
+            {/* University Logo Watermark */}
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/istockphoto-1496015679-612x612.jpg-ZXHsVLGfmaSIoa3CRWV3TWqdbyC3vs.jpeg"
+              style={styles.logoContainer}
+            />
 
-        {/* School Address & Phone */}
-        <View style={styles.studentInfoRow}>
-          <View style={{ flex: 6 }}>
-            <Text style={styles.label}>SCHOOL ADDRESS</Text>
-            <Text style={styles.value}>{studentInfo.schoolAddress}</Text>
-          </View>
-          <View style={{ flex: 3 }}>
-            <Text style={styles.label}>TELEPHONE</Text>
-            <Text style={styles.value}>{studentInfo.telephone}</Text>
-          </View>
-          <View style={{ flex: 3 }}></View>
-        </View>
+            {/* </View> */}
 
-        {/* Academic Record Header */}
-        <View style={styles.academicRecordHeader}>
-          <Text>ACADEMIC RECORD</Text>
-        </View>
-
-        {/* Academic Years Grid */}
-        <View style={styles.academicYearsContainer}>
-          {/* First row of academic years */}
-          <View style={styles.academicYearRow}>
-            {academicYears.slice(0, 2).map((year, yearIndex) => (
-              <View key={yearIndex} style={[styles.yearColumn, yearIndex === 0 && styles.borderRight]}>
-                <View style={styles.yearHeader}>
-                  <View>
-                    <Text style={styles.yearHeaderLabel}>SCHOOL YEAR:</Text>
-                    <Text>{year.year}</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.yearHeaderLabel}>GRADE LEVEL:</Text>
-                    <Text>{year.gradeLevel}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.courseTable}>
-                  <View style={styles.tableHeader}>
-                    <Text style={styles.courseTitle}>Course Title</Text>
-                    <Text style={styles.credits}>Credits Earned</Text>
-                    <Text style={styles.grade}>Final Grade</Text>
-                  </View>
-
-                  {year.courses.map((course, courseIndex) => (
-                    <View key={courseIndex} style={styles.courseRow}>
-                      <Text style={styles.courseTitle}>{course.title}</Text>
-                      <Text style={styles.credits}>{course.credits}</Text>
-                      <Text style={styles.grade}>{course.grade}</Text>
-                    </View>
-                  ))}
-
-                  <View style={styles.yearFooter}>
-                    <Text>Total Credits: {year.totalCredits}</Text>
-                    <Text>GPA: {year.gpa}</Text>
-                  </View>
-                </View>
+            {/* Student Info Box */}
+            <View style={styles.studentInfoBox}>
+              <View style={styles.studentInfoRow}>
+                <Text></Text>
+                <Text></Text>
               </View>
-            ))}
-          </View>
-
-          {/* Second row of academic years */}
-          <View style={styles.academicYearRow}>
-            {academicYears.slice(2, 4).map((year, yearIndex) => (
-              <View key={yearIndex} style={[styles.yearColumn, yearIndex === 0 && styles.borderRight]}>
-                <View style={styles.yearHeader}>
-                  <View>
-                    <Text style={styles.yearHeaderLabel}>SCHOOL YEAR:</Text>
-                    <Text>{year.year}</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.yearHeaderLabel}>GRADE LEVEL:</Text>
-                    <Text>{year.gradeLevel}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.courseTable}>
-                  <View style={styles.tableHeader}>
-                    <Text style={styles.courseTitle}>Course Title</Text>
-                    <Text style={styles.credits}>Credits Earned</Text>
-                    <Text style={styles.grade}>Final Grade</Text>
-                  </View>
-
-                  {year.courses.map((course, courseIndex) => (
-                    <View key={courseIndex} style={styles.courseRow}>
-                      <Text style={styles.courseTitle}>{course.title}</Text>
-                      <Text style={styles.credits}>{course.credits}</Text>
-                      <Text style={styles.grade}>{course.grade}</Text>
-                    </View>
-                  ))}
-
-                  <View style={styles.yearFooter}>
-                    <Text>Total Credits: {year.totalCredits}</Text>
-                    <Text>GPA: {year.gpa}</Text>
-                  </View>
-                </View>
+              <View style={styles.studentInfoRow}>
+                <Text></Text>
+                <Text></Text>
               </View>
-            ))}
-          </View>
-        </View>
+              <View style={styles.studentInfoRow}>
+                <Text>Record Of: {studentInfo.name}</Text>
+              </View>
+              <View style={styles.studentInfoRow}>
+                <Text>Student ID: {studentInfo.studentId}</Text>
+              </View>
+              <View style={styles.studentInfoRow}>
+                <Text>Gender: {studentInfo.gender}</Text>
+              </View>
 
-        {/* Academic Summary and Grading Scale */}
-        <View style={styles.academicSummaryContainer}>
-          <View style={styles.academicSummary}>
-            <Text style={styles.sectionTitle}>ACADEMIC SUMMARY</Text>
-            <View style={styles.summaryRow}>
-              <Text style={styles.label}>Cumulative GPA</Text>
-              <Text>{studentInfo.cumulativeGPA}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.label}>Credits Earned</Text>
-              <Text>Yes</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.label}>Diploma Earned</Text>
-              <Text>Yes</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.label}>Graduation Date</Text>
-              <Text>{studentInfo.graduationDate}</Text>
+ 
             </View>
           </View>
-          
-          <View style={styles.gradingScale}>
-            <Text style={styles.sectionTitle}>GRADING SCALE</Text>
-            {gradingScale.map((item, index) => (
-              <View key={index} style={styles.scaleRow}>
-                <Text>{item.range}</Text>
-                <Text>= {item.grade}</Text>
+
+          {/* Table Container */}
+          <View style={styles.tableContainer}>
+            {/* Table Header */}
+            <View style={styles.tableHeader}>
+              <Text style={styles.courseNoCol}>Course No.</Text>
+              <Text style={styles.titleCol}>Title</Text>
+              <Text style={styles.gradeCol}>GRADE</Text>
+              <Text style={styles.gradePointsCol}>GRADE POINTS</Text>
+            </View>
+
+            {/* Academic Header */}
+            <Text style={styles.academicHeader}>ACADEMIC TRANSCRIPT</Text>
+
+            {/* Academic Records */}
+            {academicYears.map((year, yearIndex) => (
+              <View key={yearIndex}>
+                <Text style={styles.termHeader}>
+                  {year.year} {year.gradeLevel}
+                </Text>
+
+                {year.courses.map((course, courseIndex) => (
+                  <View key={courseIndex} style={styles.courseRow}>
+   
+                    <Text style={[styles.courseCell, { width: "12%" }]}>
+                      {course.title}
+                    </Text>
+                    <Text style={[styles.courseCell, { width: "40%" }]}>
+                      {course.title}
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.courseCell,
+                        { width: "10%", textAlign: "center" },
+                      ]}
+                    >
+                      {course.grade}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.courseCell,
+                        { width: "10%", textAlign: "center" },
+                      ]}
+                    >
+                      {course.credits}
+                    </Text>
+                  </View>
+                ))}
+
+                <View style={styles.totalRow}>
+                  <Text style={[styles.courseCell, { width: "12%" }]}></Text>
+                  <Text style={[styles.courseCell, { width: "40%" }]}>
+                    SEMESTER TOTALS
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.courseCell,
+                      { width: "10%", textAlign: "center" },
+                    ]}
+                  >
+                    {year.gpa}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.courseCell,
+                      { width: "10%", textAlign: "center" },
+                    ]}
+                  >
+                    {year.totalCredits}
+                  </Text>
+                </View>
+
+                <View style={styles.totalRow}>
+                  <Text style={[styles.courseCell, { width: "12%" }]}></Text>
+                  <Text style={[styles.courseCell, { width: "40%" }]}>
+                    CUMULATIVE TOTALS
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.courseCell,
+                      { width: "10%", textAlign: "center" },
+                    ]}
+                  >
+                    {studentInfo.cumulativeGPA}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.courseCell,
+                      { width: "10%", textAlign: "center" },
+                    ]}
+                  >
+                    {academicHistory.summary.totalCredits}
+                  </Text>
+                </View>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Principal's Signature */}
-        <View style={styles.signatureContainer}>
-          <View style={styles.signatureColumn}>
-            <Text style={styles.signatureLabel}>SCHOOL PRINCIPAL'S SIGNATURE</Text>
-            <Text style={styles.signature}>{studentInfo.principalName}</Text>
+        <Image
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/istockphoto-1496015679-612x612.jpg-ZXHsVLGfmaSIoa3CRWV3TWqdbyC3vs.jpeg"
+          style={styles.universityLogoWatermark}
+        />
+
+        {/* Footer */}
+        <View style={styles.footerContainer}>
+          {/* Signature Section */}
+          <View style={styles.signatureContainer}>
+            <View style={styles.signatureLeft}>
+              <Text style={styles.signatureLabel}>Registrar</Text>
+              <View style={styles.signatureLine}>
+                {/* Signature will be overlaid here */}
+              </View>
+              {/* ISSUED TO STUDENT text */}
+
+              {/* Signature */}
+              <View style={styles.signature}>
+                <Svg width={120} height={40} viewBox="0 0 120 40">
+                  <Path
+                    d="M10 20 C20 10, 30 30, 40 15 C50 5, 60 25, 70 15 C80 5, 90 20, 110 10"
+                    stroke="#000"
+                    strokeWidth={1}
+                    fill="none"
+                  />
+                </Svg>
+              </View>
+              <Text style={styles.issuedToStudent}>ISSUED TO STUDENT</Text>
+
+            </View>
+
+
+            <View style={styles.signatureRight}>
+              <Image
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/istockphoto-1496015679-612x612.jpg-ZXHsVLGfmaSIoa3CRWV3TWqdbyC3vs.jpeg"
+                style={{ width: 60, height: 60 }}
+              />
+            </View>
           </View>
-          <View style={styles.signatureColumn}></View>
-          <View style={styles.signatureColumn}>
-            <Text style={styles.signatureLabel}>Date:</Text>
-            <Text style={styles.signature}>{studentInfo.graduationDate}</Text>
+
+          {/* Disclaimer */}
+          <View style={styles.disclaimerContainer}>
+            <Text style={styles.disclaimerText}>
+              Abbreviations: A-Excellent, B-Good, C-Average of grade,
+              IN-Incomplete removed, IC-Incomplete changed
+            </Text>
+            <Text style={styles.disclaimerText}>
+              AU-Repeated class, S-Satisfactory, NC-No petition, NR-No grade
+              reported, CR-Credit toward Masters
+            </Text>
+            <Text style={styles.disclaimerText}>
+              Degree, NC-No credit toward Masters Degree, P-Pass only, no credit
+              received
+            </Text>
+            <Text style={styles.disclaimerText}>
+              Student in in good standing unless otherwise indicated.
+            </Text>
           </View>
         </View>
       </View>
     </Page>
   </Document>
-);
 
-const TranscriptGenerator = () => {
-  const [studentInfo, setStudentInfo] = useState({
-    name: 'ETHAN MEADOWS',
-    dob: '09/10/2006',
-    gender: 'MALE',
-    classOf: '2024',
-    studentId: '24778245',
-    schoolName: 'SEQUOYAH HIGH SCHOOL',
-    ceedCode: '373453',
-    schoolAddress: '17091 S Muskogee Ave, Tahlequah, OK 74464',
-    telephone: '918-453-9400',
-    principalName: 'Pedro Rivera',
-    graduationDate: 'May 24, 2024',
-    cumulativeGPA: '3.10'
-  });
-
-  const [academicYears, setAcademicYears] = useState([
-    {
-      year: '2020-2021',
-      gradeLevel: '9th',
-      courses: [
-        { title: 'Algebra 1', credits: 1, grade: 'A-' },
-        { title: 'American Literature 1', credits: 1, grade: 'C' },
-        { title: 'World geography', credits: 1, grade: 'C+' },
-        { title: 'Physical science', credits: 1, grade: 'B' },
-        { title: 'AP History Elective', credits: 1, grade: 'B-' },
-        { title: 'World History', credits: 1, grade: 'B' },
-      ],
-      totalCredits: 6,
-      gpa: '3.10'
-    },
-    {
-      year: '2021-2022',
-      gradeLevel: '10th',
-      courses: [
-        { title: 'Algebra II', credits: 1, grade: 'A-' },
-        { title: 'Calculus AB', credits: 1, grade: 'C+' },
-        { title: 'American Literature I', credits: 1, grade: 'B-' },
-        { title: 'Spanish I', credits: 0.5, grade: 'C' },
-        { title: 'Biology', credits: 1, grade: 'A-' },
-        { title: 'World History', credits: 1, grade: 'B' },
-        { title: 'Physical Education', credits: 1, grade: 'B+' },
-      ],
-      totalCredits: 7,
-      gpa: '2.84'
-    },
-    {
-      year: '2022-2023',
-      gradeLevel: '11th',
-      courses: [
-        { title: 'AP Calculus BC', credits: 1, grade: 'B+' },
-        { title: 'Geometry', credits: 1, grade: 'B' },
-        { title: 'World Literature CP', credits: 1, grade: 'B+' },
-        { title: 'Spanish II', credits: 1, grade: 'A-' },
-        { title: 'Integrated Science', credits: 1, grade: 'B' },
-        { title: 'Physical Education', credits: 1, grade: 'C+' },
-        { title: 'Physics Lab', credits: 0.5, grade: 'B' },
-      ],
-      totalCredits: 7,
-      gpa: '3.01'
-    },
-    {
-      year: '2023-2024',
-      gradeLevel: '12th',
-      courses: [
-        { title: 'Britain Literature', credits: 1, grade: 'B' },
-        { title: 'Trigonometry', credits: 0.5, grade: 'A' },
-        { title: 'Chemistry Lab', credits: 1, grade: 'B' },
-        { title: 'Spanish III Fine', credits: 1, grade: 'C+' },
-        { title: 'Arts: Drawing', credits: 1, grade: 'B' },
-        { title: 'Financial Literacy', credits: 1, grade: 'B-' },
-        { title: 'Accounting 1', credits: 1, grade: 'B' },
-      ],
-      totalCredits: 7,
-      gpa: '2.93'
-    },
-  ]);
-
-  const gradingScale = [
-    { range: '90 - 100', grade: 'A' },
-    { range: '80 - 89', grade: 'B' },
-    { range: '70 - 79', grade: 'C' },
-    { range: '60 - 69', grade: 'D' },
-    { range: '59 - Below', grade: 'F' }
-  ];
-
-  // Function to generate PDF
-  const generatePDF = async () => {
-    const blob = await pdf(
-      <TranscriptDocument 
-        studentInfo={studentInfo} 
-        academicYears={academicYears} 
-        gradingScale={gradingScale} 
-      />
-    ).toBlob();
-    
-    saveAs(blob, `${studentInfo.name.replace(/\s+/g, '_')}_Transcript.pdf`);
-  };
-
-  // Function to update student info
-  const handleStudentInfoChange = (field, value) => {
-    setStudentInfo(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Function to update course data
-  const handleCourseChange = (yearIndex, courseIndex, field, value) => {
-    const updatedYears = [...academicYears];
-    updatedYears[yearIndex].courses[courseIndex][field] = value;
-    setAcademicYears(updatedYears);
-  };
-
-  return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="mb-6 space-y-4">
-        <h2 className="text-2xl font-bold">Transcript Generator</h2>
-        
-        {/* Student Info Form */}
-        <Card className="mb-4">
-          <CardContent className="p-4 space-y-4">
-            <h3 className="text-lg font-semibold">Student Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="studentName">Student Name</Label>
-                <Input 
-                  id="studentName" 
-                  value={studentInfo.name}
-                  onChange={(e) => handleStudentInfoChange('name', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="dob">Date of Birth</Label>
-                <Input 
-                  id="dob" 
-                  value={studentInfo.dob}
-                  onChange={(e) => handleStudentInfoChange('dob', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="gender">Gender</Label>
-                <Select 
-                  value={studentInfo.gender}
-                  onValueChange={(value) => handleStudentInfoChange('gender', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MALE">MALE</SelectItem>
-                    <SelectItem value="FEMALE">FEMALE</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="classOf">Class Of</Label>
-                <Input 
-                  id="classOf" 
-                  value={studentInfo.classOf}
-                  onChange={(e) => handleStudentInfoChange('classOf', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="studentId">Student ID</Label>
-                <Input 
-                  id="studentId" 
-                  value={studentInfo.studentId}
-                  onChange={(e) => handleStudentInfoChange('studentId', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="schoolName">School Name</Label>
-                <Input 
-                  id="schoolName" 
-                  value={studentInfo.schoolName}
-                  onChange={(e) => handleStudentInfoChange('schoolName', e.target.value)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Button className="mb-4" onClick={generatePDF}>Generate PDF</Button>
-      </div>
-
-      {/* Transcript Preview */}
-      <Card className="border-2 border-gray-300 bg-white">
-        <CardContent className="p-0">
-          <div className="p-8">
-            {/* Header */}
-            <div className="border border-gray-400 mb-1">
-              <div className="text-center p-4 border-b border-gray-400">
-                <h1 className="text-xl font-bold text-gray-700">{studentInfo.schoolName}</h1>
-                <p className="text-sm text-gray-600">OFFICIAL HIGH SCHOOL TRANSCRIPT</p>
-              </div>
-
-              {/* Student Info - Removed partitions/borders */}
-              <div className="grid grid-cols-12 text-sm border-b border-gray-400 p-2">
-                <div className="col-span-4">
-                  <div className="text-xs text-gray-500">STUDENT NAME</div>
-                  <div>{studentInfo.name}</div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-xs text-gray-500">DATE OF BIRTH</div>
-                  <div>{studentInfo.dob}</div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-xs text-gray-500">GENDER</div>
-                  <div>{studentInfo.gender}</div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-xs text-gray-500">CLASS OF</div>
-                  <div>{studentInfo.classOf}</div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-xs text-gray-500">STUDENT ID</div>
-                  <div>{studentInfo.studentId}</div>
-                </div>
-              </div>
-
-              {/* School Info - Removed partitions/borders */}
-              <div className="grid grid-cols-12 text-sm border-b border-gray-400 p-2">
-                <div className="col-span-4">
-                  <div className="text-xs text-gray-500">SCHOOL NAME</div>
-                  <div>{studentInfo.schoolName}</div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-xs text-gray-500">CEED CODE</div>
-                  <div>{studentInfo.ceedCode}</div>
-                </div>
-                <div className="col-span-6"></div>
-              </div>
-
-              <div className="grid grid-cols-12 text-sm p-2">
-                <div className="col-span-6">
-                  <div className="text-xs text-gray-500">SCHOOL ADDRESS</div>
-                  <div>{studentInfo.schoolAddress}</div>
-                </div>
-                <div className="col-span-3">
-                  <div className="text-xs text-gray-500">TELEPHONE</div>
-                  <div>{studentInfo.telephone}</div>
-                </div>
-                <div className="col-span-3"></div>
-              </div>
-            </div>
-
-            {/* Academic Record Header */}
-            <div className="border border-gray-400 p-2 mb-1 text-center font-semibold">
-              ACADEMIC RECORD
-            </div>
-
-            {/* Academic Years Grid */}
-            <div className="border border-gray-400 mb-1">
-              <div className="grid grid-cols-2 text-sm">
-                {academicYears.map((year, yearIndex) => (
-                  <div key={yearIndex} className={`p-2 ${yearIndex % 2 === 0 ? 'border-r' : ''} ${yearIndex < 2 ? 'border-b' : ''} border-gray-400`}>
-                    <div className="flex justify-between mb-2">
-                      <div>
-                        <span className="text-xs text-gray-500">SCHOOL YEAR: </span>
-                        <span>{year.year}</span>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500">GRADE LEVEL: </span>
-                        <span>{year.gradeLevel}</span>
-                      </div>
-                    </div>
-
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr>
-                          <th className="text-left">Course Title</th>
-                          <th className="text-center">Credits Earned</th>
-                          <th className="text-center">Final Grade</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {year.courses.map((course, courseIndex) => (
-                          <tr key={courseIndex}>
-                            <td>{course.title}</td>
-                            <td className="text-center">{course.credits}</td>
-                            <td className="text-center">{course.grade}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <td className="pt-2">
-                            <span className="text-xs text-gray-500">Total Credits: </span>
-                            <span>{year.totalCredits}</span>
-                          </td>
-                          <td></td>
-                          <td className="text-right pt-2">
-                            <span className="text-xs text-gray-500">GPA: </span>
-                            <span>{year.gpa}</span>
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Academic Summary */}
-            <div className="border border-gray-400 mb-1">
-              <div className="grid grid-cols-3 text-sm">
-                <div className="col-span-2 border-r border-gray-400 p-2">
-                  <div className="text-xs font-semibold mb-1">ACADEMIC SUMMARY</div>
-                  <table className="w-full text-xs">
-                    <tbody>
-                      <tr>
-                        <td className="py-1">
-                          <span className="text-gray-500">Cumulative GPA</span>
-                        </td>
-                        <td className="text-right">{studentInfo.cumulativeGPA}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1">
-                          <span className="text-gray-500">Credits Earned</span>
-                        </td>
-                        <td className="text-right">Yes</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1">
-                          <span className="text-gray-500">Diploma Earned</span>
-                        </td>
-                        <td className="text-right">Yes</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1">
-                          <span className="text-gray-500">Graduation Date</span>
-                        </td>
-                        <td className="text-right">{studentInfo.graduationDate}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div className="p-2">
-                  <div className="text-xs font-semibold mb-1">GRADING SCALE</div>
-                  <table className="w-full text-xs">
-                    <tbody>
-                      {gradingScale.map((item, index) => (
-                        <tr key={index}>
-                          <td className="py-1">{item.range}</td>
-                          <td className="text-right">= {item.grade}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {/* Principal's Signature */}
-            <div className="border border-gray-400">
-              <div className="grid grid-cols-3 text-sm p-2">
-                <div>
-                  <div className="text-xs text-gray-500">SCHOOL PRINCIPAL'S SIGNATURE</div>
-                  <div className="italic pt-2">{studentInfo.principalName}</div>
-                </div>
-                <div></div>
-                <div>
-                  <div className="text-xs text-gray-500">Date:</div>
-                  <div className="pt-2">{studentInfo.graduationDate}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
   );
 };
+
 
 export default TranscriptGenerator;
