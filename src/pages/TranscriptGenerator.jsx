@@ -204,6 +204,8 @@ const styles = StyleSheet.create({
     width: "40%",
     padding: 3,
     borderRight: "1pt solid #000",
+    textAlign: "left",
+
   },
   unitsAttemptedCol: {
     width: "10%",
@@ -219,7 +221,7 @@ const styles = StyleSheet.create({
   },
   gradeCol: {
     width: "10%",
-    textAlign: "center",
+    textAlign: "left",
     padding: 3,
     borderRight: "1pt solid #000",
   },
@@ -227,6 +229,8 @@ const styles = StyleSheet.create({
     width: "10%",
     textAlign: "center",
     padding: 3,
+    textAlign: "left",
+
   },
   academicHeader: {
     textAlign: "center",
@@ -533,7 +537,7 @@ const TranscriptGenerator = ({ academicHistory }) => {
               {/* Table Header */}
               <View style={styles.tableHeader}>
                 <Text style={styles.courseNoCol}>Unit Code </Text>
-                <Text style={styles.titleCol}>Unt Name</Text>
+                <Text style={styles.titleCol}>Unit Name</Text>
                 <Text style={styles.gradeCol}>Grade</Text>
                 <Text style={styles.gradePointsCol}>Credits</Text>
               </View>
@@ -552,7 +556,7 @@ const TranscriptGenerator = ({ academicHistory }) => {
                         {course.code}
                       </Text>
                       <Text style={[styles.courseCell, { width: "40%" }]}>{course.title}</Text>
-                      <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>{course.grade}</Text>
+                      <Text style={[styles.courseCell, { width: "10%", textAlign: "left" }]}>{course.grade}</Text>
                       <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>{course.credits}</Text>
                     </View>
                   ))}
@@ -561,7 +565,7 @@ const TranscriptGenerator = ({ academicHistory }) => {
                     <Text style={[styles.courseCell, { width: "12%" }]}></Text>
                     <Text style={[styles.courseCell, { width: "40%" }]}>TOTALS</Text>
 
-                    <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>{year.gpa}</Text>
+                    <Text style={[styles.courseCell, { width: "10%", textAlign: "left" }]}>{year.gpa}</Text>
                     <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>{year.totalCredits}</Text>
                   </View>
                 </View>
@@ -571,7 +575,7 @@ const TranscriptGenerator = ({ academicHistory }) => {
                 <Text style={[styles.courseCell, { width: "12%" }]}></Text>
                 <Text style={[styles.courseCell, { width: "40%" }]}>CUMULATIVE TOTALS</Text>
 
-                <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>
+                <Text style={[styles.courseCell, { width: "10%", textAlign: "left" }]}>
                   {studentInfo.cumulativeGPA}
                 </Text>
                 <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>
