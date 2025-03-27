@@ -146,7 +146,7 @@ export function TranscriptsTable() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
-                    <Button
+                    {/* <Button
                       variant="outline"
                       size="sm"
                       className="gap-2"
@@ -154,7 +154,7 @@ export function TranscriptsTable() {
                     >
                       <Download className="h-4 w-4" />
                       Download Transcript
-                    </Button>
+                    </Button> */}
                     <Link to={`/transcripts/${transcript.id}/edit`}>
 
                     <Button variant="outline" size="sm" className="gap-2">

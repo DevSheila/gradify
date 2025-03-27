@@ -1,13 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { Download } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { Circle, Download } from "lucide-react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -15,17 +15,27 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { getStudentAcademicHistory } from '@/lib/services/transcript-service';
-import AcademicHistoryPDF from './AcademicHistoryPDF';
-import TranscriptGenerator from '@/pages/TranscriptGenerator';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getStudentAcademicHistory } from "@/lib/services/transcript-service";
+import AcademicHistoryPDF from "./AcademicHistoryPDF";
+import TranscriptGenerator from "@/pages/TranscriptGenerator";
 
 export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
-  const { data: academicHistory, isLoading, error } = useQuery({
-    queryKey: ['academicHistory', studentId],
+  const {
+    data: academicHistory,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["academicHistory", studentId],
     queryFn: () => getStudentAcademicHistory(studentId),
     enabled: !!studentId && open,
   });
@@ -48,7 +58,9 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
         <DialogContent>
           <div className="flex items-center justify-center h-40">
             <p className="text-destructive">
-              {error ? `Error loading academic history: ${error.message}` : 'No academic history found'}
+              {error
+                ? `Error loading academic history: ${error.message}`
+                : "No academic history found"}
             </p>
           </div>
         </DialogContent>
@@ -56,8 +68,9 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
     );
   }
 
-  const sortedYears = Object.entries(academicHistory.transcripts || {})
-    .sort(([yearA], [yearB]) => yearB.localeCompare(yearA));
+  const sortedYears = Object.entries(academicHistory.transcripts || {}).sort(
+    ([yearA], [yearB]) => yearB.localeCompare(yearA)
+  );
 
   if (sortedYears.length === 0) {
     return (
@@ -75,9 +88,10 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
   }
 
   // Get the latest transcript for student information
-  const latestYear = sortedYears[0]; 
+  const latestYear = sortedYears[0];
   const latestTranscript = latestYear[1][0];
 
+  const studentName = latestTranscript?.student?.fullName?.replace(/\s+/g, "_") || "student";
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -85,29 +99,53 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
           <div className="flex items-center justify-between">
             <DialogTitle>Academic History</DialogTitle>
             {academicHistory && (
-              // <PDFDownloadLink
-              //   document={<AcademicHistoryPDF academicHistory={academicHistory} />}
-              //   fileName={`academic-history-${studentId}.pdf`}
-              // >
-              //   {({ loading }) => (
-              //     <Button variant="outline" className="gap-2" disabled={loading}>
-              //       <Download className="h-4 w-4" />
-              //       {loading ? 'Generating PDF...' : 'Download Academic History'}
-              //     </Button>
-              //   )}
-              // </PDFDownloadLink>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Download Academic History
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <PDFDownloadLink
+                      document={
+                        <TranscriptGenerator
+                          academicHistory={academicHistory}
+                        />
+                      }
+                      fileName={`${studentName}-formal-transcript.pdf`}
+                    >
+                      {({ loading }) => (
+                        <div className="flex items-center gap-2">
+                          <Circle className="h-4 w-4" />
+                          {loading
+                            ? "Generating Formal PDF..."
+                            : "Download Formal Transcript"}
+                        </div>
+                      )}
+                    </PDFDownloadLink>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <PDFDownloadLink
+                      document={
+                        <AcademicHistoryPDF academicHistory={academicHistory} />
+                      }
+                      fileName={`${studentName}-casual-transcript.pdf`}
 
-              <PDFDownloadLink
-              document={<TranscriptGenerator academicHistory={academicHistory} />}
-              fileName={`academic-history-${studentId}.pdf`}
-            >
-              {({ loading }) => (
-                <Button variant="outline" className="gap-2" disabled={loading}>
-                  <Download className="h-4 w-4" />
-                  {loading ? 'Generating PDF...' : 'Download Academic History'}
-                </Button>
-              )}
-            </PDFDownloadLink>
+                    >
+                      {({ loading }) => (
+                        <div className="flex items-center gap-2">
+                          <Circle className="h-4 w-4" />
+                          {loading
+                            ? "Generating Casual PDF..."
+                            : "Download Casual Transcript"}
+                        </div>
+                      )}
+                    </PDFDownloadLink>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </DialogHeader>
@@ -120,21 +158,29 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Full Name</p>
-                  <p className="font-medium">{latestTranscript?.student?.fullName || 'N/A'}</p>
+                  <p className="font-medium">
+                    {latestTranscript?.student?.fullName || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Student ID</p>
                   <p className="font-medium">{studentId}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Current Grade Level</p>
+                  <p className="text-sm text-muted-foreground">
+                    Current Grade Level
+                  </p>
                   <Badge variant="outline" className="mt-1">
-                    {latestTranscript?.student?.gradeLevel || 'N/A'}
+                    {latestTranscript?.student?.gradeLevel || "N/A"}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Current School</p>
-                  <p className="font-medium">{latestTranscript?.student?.schoolName || 'N/A'}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Current School
+                  </p>
+                  <p className="font-medium">
+                    {latestTranscript?.student?.schoolName || "N/A"}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -146,21 +192,26 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Academic Year {year}</h3>
                 <Badge variant="outline">
-                  {transcripts[0]?.student?.gradeLevel || 'N/A'}
+                  {transcripts[0]?.student?.gradeLevel || "N/A"}
                 </Badge>
               </div>
-              
+
               {transcripts.map((transcript, index) => (
                 <Card key={`${year}-${index}`} className="p-6">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="font-medium">{transcript.student?.schoolName || 'N/A'}</h4>
+                        <h4 className="font-medium">
+                          {transcript.student?.schoolName || "N/A"}
+                        </h4>
                         <p className="text-sm text-muted-foreground">
-                          Created on {transcript.createdAt ? format(transcript.createdAt, 'MMM d, yyyy') : 'N/A'}
+                          Created on{" "}
+                          {transcript.createdAt
+                            ? format(transcript.createdAt, "MMM d, yyyy")
+                            : "N/A"}
                         </p>
                       </div>
-                      <Badge>GPA: {transcript.gpa?.toFixed(2) || 'N/A'}</Badge>
+                      <Badge>GPA: {transcript.gpa?.toFixed(2) || "N/A"}</Badge>
                     </div>
 
                     <Table>
@@ -169,7 +220,9 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
                           <TableHead>Unit Code</TableHead>
                           <TableHead>Unit Name</TableHead>
                           <TableHead className="text-right">Grade</TableHead>
-                          <TableHead className="text-right">Credit Hours</TableHead>
+                          <TableHead className="text-right">
+                            Credit Hours
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -177,13 +230,22 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
                           <TableRow key={unitIndex}>
                             <TableCell>{unit.code}</TableCell>
                             <TableCell>{unit.name}</TableCell>
-                            <TableCell className="text-right">{unit.grade}</TableCell>
-                            <TableCell className="text-right">{unit.creditHours}</TableCell>
+                            <TableCell className="text-right">
+                              {unit.grade}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {unit.creditHours}
+                            </TableCell>
                           </TableRow>
                         ))}
                         <TableRow>
-                          <TableCell colSpan={2} className="font-medium">Total Credit Hours</TableCell>
-                          <TableCell colSpan={2} className="text-right font-medium">
+                          <TableCell colSpan={2} className="font-medium">
+                            Total Credit Hours
+                          </TableCell>
+                          <TableCell
+                            colSpan={2}
+                            className="text-right font-medium"
+                          >
                             {transcript.totalCreditHours}
                           </TableCell>
                         </TableRow>
@@ -201,16 +263,28 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
             <Card className="p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Cumulative GPA</p>
-                  <p className="font-medium">{academicHistory.summary.cumulativeGPA}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Cumulative GPA
+                  </p>
+                  <p className="font-medium">
+                    {academicHistory.summary.cumulativeGPA}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Credits Earned</p>
-                  <p className="font-medium">{academicHistory.summary.totalCredits}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Credits Earned
+                  </p>
+                  <p className="font-medium">
+                    {academicHistory.summary.totalCredits}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Years Completed</p>
-                  <p className="font-medium">{academicHistory.summary.yearsCompleted}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Years Completed
+                  </p>
+                  <p className="font-medium">
+                    {academicHistory.summary.yearsCompleted}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -219,4 +293,4 @@ export function AcademicHistoryDialog({ studentId, open, onOpenChange }) {
       </DialogContent>
     </Dialog>
   );
-} 
+}

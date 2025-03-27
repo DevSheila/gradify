@@ -218,6 +218,7 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
       gradeLevel: firstTranscript.student.gradeLevel === 'N/A' ? lastValidValues.gradeLevel : firstTranscript.student.gradeLevel,
       courses: yearTranscripts.flatMap(transcript => 
         transcript.units.map(unit => ({
+          code: unit.code,
           title: unit.name,
           credits: unit.creditHours,
           grade: unit.grade
@@ -308,9 +309,9 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
 
                   <View style={styles.courseTable}>
                     <View style={styles.tableHeader}>
-                      <Text style={styles.courseTitle}>Course Title</Text>
+                      <Text style={styles.courseTitle}>Unit Name</Text>
                       <Text style={styles.credits}>Credits Earned</Text>
-                      <Text style={styles.grade}>Final Grade</Text>
+                      <Text style={styles.grade}> Grade</Text>
                     </View>
 
                     {year.courses.map((course, courseIndex) => (
