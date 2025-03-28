@@ -86,9 +86,14 @@ const styles = StyleSheet.create({
     flex: 2,
     textAlign: 'center',
   },
+  gradeHeader: {
+    flex: 2,
+    textAlign: 'left',
+    marginRight: 10,
+  },
   grade: {
     flex: 2,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   yearFooter: {
     flexDirection: 'row',
@@ -310,15 +315,16 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
                   <View style={styles.courseTable}>
                     <View style={styles.tableHeader}>
                       <Text style={styles.courseTitle}>Unit Name</Text>
+                      <Text style={styles.gradeHeader}> Grade</Text>
                       <Text style={styles.credits}>Credits Earned</Text>
-                      <Text style={styles.grade}> Grade</Text>
+
                     </View>
 
                     {year.courses.map((course, courseIndex) => (
                       <View key={courseIndex} style={styles.courseRow}>
                         <Text style={styles.courseTitle}>{course.title}</Text>
-                        <Text style={styles.credits}>{course.credits}</Text>
                         <Text style={styles.grade}>{course.grade}</Text>
+                        <Text style={styles.credits}>{course.credits}</Text>
                       </View>
                     ))}
 
