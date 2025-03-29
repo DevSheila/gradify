@@ -7,12 +7,10 @@ export const genderEnum = {
 };
 
 export const gradeLevelEnum = {
-  FRESHMAN: 'Freshman',
-  SOPHOMORE: 'Sophomore',
-  JUNIOR: 'Junior',
-  SENIOR: 'Senior',
-  GRADUATE: 'Graduate',
-  OTHER: 'Other',
+  FRESHMAN: '9th Grade',
+  SOPHOMORE: '10th Grade',
+  JUNIOR: '11th Grade',
+  SENIOR: '12th Grade',
 };
 
 export const gradeEnum = {
