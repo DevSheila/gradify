@@ -75,6 +75,7 @@ export const transcriptSchema = z.object({
     studentId: z.string().min(1, 'Student ID is required'),
     schoolName: z.string().min(1, 'School name is required'),
     schoolAddress: z.string().min(1, 'School address is required'),
+    studentAddress: z.string().min(1, 'Student address is required'),
     gender: z.nativeEnum(genderEnum, {
       errorMap: () => ({ message: 'Please select a gender' }),
     }),

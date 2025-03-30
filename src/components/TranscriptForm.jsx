@@ -1,7 +1,7 @@
-import { useFieldArray, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -9,41 +9,47 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
-import { transcriptSchema, gradeEnum, genderEnum, gradeLevelEnum } from '@/lib/validations/transcript';
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
+import {
+  transcriptSchema,
+  gradeEnum,
+  genderEnum,
+  gradeLevelEnum,
+} from "@/lib/validations/transcript";
 
 const defaultUnit = {
-  code: '',
-  name: '',
-  grade: '',
-  creditHours: '',
+  code: "",
+  name: "",
+  grade: "",
+  creditHours: "",
 };
 
 export function TranscriptForm({
   defaultValues,
   onSubmit,
   isSubmitting = false,
-  submitText = 'Create Transcript',
+  submitText = "Create Transcript",
 }) {
   const form = useForm({
     resolver: zodResolver(transcriptSchema),
     defaultValues: defaultValues || {
       student: {
-        fullName: '',
-        studentId: '',
-        schoolName: '',
-        schoolAddress: '',
-        gender: '',
-        gradeLevel: '',
+        fullName: "",
+        studentId: "",
+        schoolName: "",
+        schoolAddress: "",
+        studentAddress: "",
+        gender: "",
+        gradeLevel: "",
         year: new Date().getFullYear().toString(),
       },
       units: [defaultUnit],
@@ -52,14 +58,14 @@ export function TranscriptForm({
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'units',
+    name: "units",
   });
 
   const handleSubmit = async (data) => {
-    if (typeof onSubmit === 'function') {
+    if (typeof onSubmit === "function") {
       await onSubmit(data);
     } else {
-      console.error('onSubmit prop is not a function');
+      console.error("onSubmit prop is not a function");
     }
   };
 
@@ -184,6 +190,19 @@ export function TranscriptForm({
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="student.studentAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>School Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter school address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="student.year"
@@ -311,10 +330,10 @@ export function TranscriptForm({
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitText}
+            {isSubmitting ? "Saving..." : submitText}
           </Button>
         </div>
       </form>
     </Form>
   );
-} 
+}

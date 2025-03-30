@@ -199,6 +199,7 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
     schoolName: "",
     schoolCode: "",
     schoolAddress: "",
+    studentAddress: "",
     schoolPhone: "",
     principalName: "",
   };
@@ -231,6 +232,13 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
       firstTranscript.student.schoolAddress !== "N/A"
     ) {
       lastValidValues.schoolAddress = firstTranscript.student.schoolAddress;
+    }
+
+    if (
+      firstTranscript.student.studentAddress &&
+      firstTranscript.student.studentAddress !== "N/A"
+    ) {
+      lastValidValues.studentAddress = firstTranscript.student.studentAddress;
     }
     if (
       firstTranscript.student.schoolPhone &&
@@ -280,6 +288,10 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
       latestTranscript.student.schoolAddress === "N/A"
         ? lastValidValues.schoolAddress
         : latestTranscript.student.schoolAddress,
+    studentAddress:
+      latestTranscript.student.studentAddress === "N/A"
+        ? lastValidValues.studentAddress
+        : latestTranscript.student.studentAddress,
     principalName:
       latestTranscript.student.principalName === "N/A"
         ? lastValidValues.principalName
@@ -313,7 +325,12 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
               <Text style={styles.label}>STUDENT ID</Text>
               <Text style={styles.value}>{studentInfo.studentId}</Text>
             </View>
-            <View style={{ flex: 4 }}></View>
+
+            <View style={{ flex: 2 }}>
+              <Text style={styles.label}>STUDENT ADDRESS</Text>
+              <Text style={styles.value}>{studentInfo.studentAddress}</Text>
+            </View>
+            <View style={{ flex: 2 }}></View>
           </View>
 
           {/* School Info Row */}
@@ -420,7 +437,6 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
                           <Text style={styles.courseTitle}>{course.title}</Text>
                           <Text style={styles.grade}>{course.grade}</Text>
                           <Text style={styles.credits}>{course.credits}</Text>
-
                         </View>
                       ))}
 

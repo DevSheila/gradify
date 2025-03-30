@@ -62,6 +62,10 @@ export function TranscriptDetailsDialog({ transcript, open, onOpenChange }) {
                   <p className="font-medium">{transcript.student.gender}</p>
                 </div>
                 <div>
+                  <p className="text-sm text-muted-foreground">Student Address</p>
+                  <p className="font-medium">{transcript.student.studentAddress}</p>
+                </div>
+                <div>
                   <p className="text-sm text-muted-foreground">Grade Level</p>
                   <Badge variant="outline" className="mt-1">
                     {transcript.student.gradeLevel}

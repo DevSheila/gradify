@@ -150,7 +150,11 @@ const TranscriptDocument = ({ transcript }) => (
             <Text style={styles.label}>STUDENT ID</Text>
             <Text style={styles.value}>{transcript.student.studentId}</Text>
           </View>
-          <View style={{ flex: 4 }}></View>
+          <View style={{ flex: 2 }}>
+            <Text style={styles.label}>STUDENT ADDRESS</Text>
+            <Text style={styles.value}>{transcript.student.studentAddress}</Text>
+          </View>
+          <View style={{ flex: 2 }}></View>
         </View>
 
         {/* School Info Row */}

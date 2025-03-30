@@ -1,15 +1,25 @@
-import { Document, Page, Text, View, StyleSheet, Font, Svg, Path, Image } from "@react-pdf/renderer"
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
+  Svg,
+  Path,
+  Image,
+} from "@react-pdf/renderer";
 
 // Register fonts - using monospace fonts to match the typewriter style in the original
 Font.register({
   family: "Courier",
   src: "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf",
-})
+});
 
 Font.register({
   family: "Courier-Bold",
   src: "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Bold.ttf",
-})
+});
 
 // Create styles for PDF
 const styles = StyleSheet.create({
@@ -152,6 +162,12 @@ const styles = StyleSheet.create({
     // color: "#c41e3a", // University red color to match image
     color: "#000000",
   },
+  studentAddress: {
+    fontSize: 10,
+    marginBottom: 2,
+    // color: "#c41e3a", // University red color to match image
+    color: "#000000",
+  },
   studentInfoBox: {
     position: "absolute",
     top: 15,
@@ -205,7 +221,6 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRight: "1pt solid #000",
     textAlign: "left",
-
   },
   unitsAttemptedCol: {
     width: "10%",
@@ -230,7 +245,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: 3,
     textAlign: "left",
-
   },
   academicHeader: {
     textAlign: "center",
@@ -344,14 +358,16 @@ const styles = StyleSheet.create({
   gradingScaleItem: {
     marginHorizontal: 10,
   },
-})
+});
 
 // PDF Document component
 const TranscriptGenerator = ({ academicHistory }) => {
   // Get the latest transcript for student information
-  const years = Object.keys(academicHistory.transcripts).sort((a, b) => b.localeCompare(a))
-  const latestYear = years[0]
-  const latestTranscript = academicHistory.transcripts[latestYear][0]
+  const years = Object.keys(academicHistory.transcripts).sort((a, b) =>
+    b.localeCompare(a)
+  );
+  const latestYear = years[0];
+  const latestTranscript = academicHistory.transcripts[latestYear][0];
 
   // Transform transcripts into academic years format and track last valid values
   const lastValidValues = {
@@ -359,50 +375,80 @@ const TranscriptGenerator = ({ academicHistory }) => {
     schoolName: "",
     schoolCode: "",
     schoolAddress: "",
+    studentAddress: "",
     schoolPhone: "",
     principalName: "",
-  }
+  };
 
   const academicYears = years.map((year) => {
-    const yearTranscripts = academicHistory.transcripts[year]
-    const firstTranscript = yearTranscripts[0]
+    const yearTranscripts = academicHistory.transcripts[year];
+    const firstTranscript = yearTranscripts[0];
 
     // Update last valid values if current values are not N/A
-    if (firstTranscript.student.gradeLevel && firstTranscript.student.gradeLevel !== "N/A") {
-      lastValidValues.gradeLevel = firstTranscript.student.gradeLevel
+    if (
+      firstTranscript.student.gradeLevel &&
+      firstTranscript.student.gradeLevel !== "N/A"
+    ) {
+      lastValidValues.gradeLevel = firstTranscript.student.gradeLevel;
     }
-    if (firstTranscript.student.schoolName && firstTranscript.student.schoolName !== "N/A") {
-      lastValidValues.schoolName = firstTranscript.student.schoolName
+    if (
+      firstTranscript.student.schoolName &&
+      firstTranscript.student.schoolName !== "N/A"
+    ) {
+      lastValidValues.schoolName = firstTranscript.student.schoolName;
     }
-    if (firstTranscript.student.schoolCode && firstTranscript.student.schoolCode !== "N/A") {
-      lastValidValues.schoolCode = firstTranscript.student.schoolCode
+    if (
+      firstTranscript.student.schoolCode &&
+      firstTranscript.student.schoolCode !== "N/A"
+    ) {
+      lastValidValues.schoolCode = firstTranscript.student.schoolCode;
     }
-    if (firstTranscript.student.schoolAddress && firstTranscript.student.schoolAddress !== "N/A") {
-      lastValidValues.schoolAddress = firstTranscript.student.schoolAddress
+    if (
+      firstTranscript.student.schoolAddress &&
+      firstTranscript.student.schoolAddress !== "N/A"
+    ) {
+      lastValidValues.schoolAddress = firstTranscript.student.schoolAddress;
     }
-    if (firstTranscript.student.schoolPhone && firstTranscript.student.schoolPhone !== "N/A") {
-      lastValidValues.schoolPhone = firstTranscript.student.schoolPhone
+    if (
+      firstTranscript.student.studentAddress &&
+      firstTranscript.student.studentAddress !== "N/A"
+    ) {
+      lastValidValues.studentAddress = firstTranscript.student.studentAddress;
     }
-    if (firstTranscript.student.principalName && firstTranscript.student.principalName !== "N/A") {
-      lastValidValues.principalName = firstTranscript.student.principalName
+    if (
+      firstTranscript.student.schoolPhone &&
+      firstTranscript.student.schoolPhone !== "N/A"
+    ) {
+      lastValidValues.schoolPhone = firstTranscript.student.schoolPhone;
+    }
+    if (
+      firstTranscript.student.principalName &&
+      firstTranscript.student.principalName !== "N/A"
+    ) {
+      lastValidValues.principalName = firstTranscript.student.principalName;
     }
 
     return {
       year,
       gradeLevel:
-        firstTranscript.student.gradeLevel === "N/A" ? lastValidValues.gradeLevel : firstTranscript.student.gradeLevel,
+        firstTranscript.student.gradeLevel === "N/A"
+          ? lastValidValues.gradeLevel
+          : firstTranscript.student.gradeLevel,
       courses: yearTranscripts.flatMap((transcript) =>
         transcript.units.map((unit) => ({
           code: unit.code,
           title: unit.name,
           credits: unit.creditHours,
           grade: unit.grade,
-        })),
+        }))
       ),
-      totalCredits: yearTranscripts.reduce((sum, t) => sum + t.totalCreditHours, 0),
+      totalCredits: yearTranscripts.reduce(
+        (sum, t) => sum + t.totalCreditHours,
+        0
+      ),
       gpa: yearTranscripts[0].gpa.toFixed(2),
-    }
-  })
+    };
+  });
 
   // Prepare student info using last valid values for N/A fields
   const studentInfo = {
@@ -410,17 +456,23 @@ const TranscriptGenerator = ({ academicHistory }) => {
     gender: latestTranscript.student.gender || "N/A",
     studentId: latestTranscript.student.studentId,
     schoolName:
-      latestTranscript.student.schoolName === "N/A" ? lastValidValues.schoolName : latestTranscript.student.schoolName,
+      latestTranscript.student.schoolName === "N/A"
+        ? lastValidValues.schoolName
+        : latestTranscript.student.schoolName,
     schoolAddress:
       latestTranscript.student.schoolAddress === "N/A"
         ? lastValidValues.schoolAddress
         : latestTranscript.student.schoolAddress,
+    studentAddress:
+      latestTranscript.student.studentAddress === "N/A"
+        ? lastValidValues.studentAddress
+        : latestTranscript.student.studentAddress,
     principalName:
       latestTranscript.student.principalName === "N/A"
         ? lastValidValues.principalName
         : latestTranscript.student.principalName,
     cumulativeGPA: academicHistory.summary.cumulativeGPA,
-  }
+  };
 
   return (
     <Document>
@@ -481,10 +533,18 @@ const TranscriptGenerator = ({ academicHistory }) => {
         </View>
 
         {/* Security Text on Borders */}
-        <Text style={styles.securityText}>OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER</Text>
-        <Text style={styles.securityTextBottom}>OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER</Text>
-        <Text style={styles.securityTextLeft}>OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER</Text>
-        <Text style={styles.securityTextRight}>OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER</Text>
+        <Text style={styles.securityText}>
+          OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+        </Text>
+        <Text style={styles.securityTextBottom}>
+          OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+        </Text>
+        <Text style={styles.securityTextLeft}>
+          OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+        </Text>
+        <Text style={styles.securityTextRight}>
+          OFFICIAL SCHOOL TRANSCRIPT - SECURITY PAPER
+        </Text>
 
         {/* Page Number */}
         <Text style={styles.pageNumber}>Page 1 of 1</Text>
@@ -496,7 +556,9 @@ const TranscriptGenerator = ({ academicHistory }) => {
               <View style={styles.schoolInfo}>
                 <Text style={styles.schoolName}>{studentInfo.schoolName}</Text>
                 <Text style={styles.schoolAddress}>Registrar's Office</Text>
-                <Text style={styles.schoolAddress}>{studentInfo.schoolAddress}</Text>
+                <Text style={styles.schoolAddress}>
+                  {studentInfo.schoolAddress}
+                </Text>
               </View>
 
               {/* University Logo Watermark */}
@@ -525,6 +587,9 @@ const TranscriptGenerator = ({ academicHistory }) => {
                 </View>
                 <View style={styles.studentInfoRow}>
                   <Text>Gender: {studentInfo.gender}</Text>
+                </View>
+                <View style={styles.studentInfoRow}>
+                  <Text>Address: {studentInfo.studentAddress}</Text>
                 </View>
               </View>
             </View>
@@ -555,30 +620,74 @@ const TranscriptGenerator = ({ academicHistory }) => {
                         {/* {course.title.substring(0, 8)} */}
                         {course.code}
                       </Text>
-                      <Text style={[styles.courseCell, { width: "40%" }]}>{course.title}</Text>
-                      <Text style={[styles.courseCell, { width: "10%", textAlign: "left" }]}>{course.grade}</Text>
-                      <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>{course.credits}</Text>
+                      <Text style={[styles.courseCell, { width: "40%" }]}>
+                        {course.title}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.courseCell,
+                          { width: "10%", textAlign: "left" },
+                        ]}
+                      >
+                        {course.grade}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.courseCell,
+                          { width: "10%", textAlign: "center" },
+                        ]}
+                      >
+                        {course.credits}
+                      </Text>
                     </View>
                   ))}
 
                   <View style={styles.totalRow}>
                     <Text style={[styles.courseCell, { width: "12%" }]}></Text>
-                    <Text style={[styles.courseCell, { width: "40%" }]}>TOTALS</Text>
+                    <Text style={[styles.courseCell, { width: "40%" }]}>
+                      TOTALS
+                    </Text>
 
-                    <Text style={[styles.courseCell, { width: "10%", textAlign: "left" }]}>{year.gpa}</Text>
-                    <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>{year.totalCredits}</Text>
+                    <Text
+                      style={[
+                        styles.courseCell,
+                        { width: "10%", textAlign: "left" },
+                      ]}
+                    >
+                      {year.gpa}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.courseCell,
+                        { width: "10%", textAlign: "center" },
+                      ]}
+                    >
+                      {year.totalCredits}
+                    </Text>
                   </View>
                 </View>
               ))}
 
               <View style={styles.totalRow}>
                 <Text style={[styles.courseCell, { width: "12%" }]}></Text>
-                <Text style={[styles.courseCell, { width: "40%" }]}>CUMULATIVE TOTALS</Text>
+                <Text style={[styles.courseCell, { width: "40%" }]}>
+                  CUMULATIVE TOTALS
+                </Text>
 
-                <Text style={[styles.courseCell, { width: "10%", textAlign: "left" }]}>
+                <Text
+                  style={[
+                    styles.courseCell,
+                    { width: "10%", textAlign: "left" },
+                  ]}
+                >
                   {studentInfo.cumulativeGPA}
                 </Text>
-                <Text style={[styles.courseCell, { width: "10%", textAlign: "center" }]}>
+                <Text
+                  style={[
+                    styles.courseCell,
+                    { width: "10%", textAlign: "center" },
+                  ]}
+                >
                   {academicHistory.summary.totalCredits}
                 </Text>
               </View>
@@ -596,7 +705,9 @@ const TranscriptGenerator = ({ academicHistory }) => {
             <View style={styles.signatureContainer}>
               <View style={styles.signatureLeft}>
                 <Text style={styles.signatureLabel}>Registrar</Text>
-                <View style={styles.signatureLine}>{/* Signature will be overlaid here */}</View>
+                <View style={styles.signatureLine}>
+                  {/* Signature will be overlaid here */}
+                </View>
                 {/* ISSUED TO STUDENT text */}
                 <Text style={styles.issuedToStudent}>ISSUED TO STUDENT</Text>
 
@@ -634,24 +745,27 @@ const TranscriptGenerator = ({ academicHistory }) => {
             {/* Disclaimer */}
             <View style={styles.disclaimerContainer}>
               <Text style={styles.disclaimerText}>
-                Abbreviations: A-Excellent, B-Good, C-Average of grade, IN-Incomplete removed, IC-Incomplete changed
+                Abbreviations: A-Excellent, B-Good, C-Average of grade,
+                IN-Incomplete removed, IC-Incomplete changed
               </Text>
               <Text style={styles.disclaimerText}>
-                AU-Repeated class, S-Satisfactory, NC-No petition, NR-No grade reported, CR-Credit toward Masters
+                AU-Repeated class, S-Satisfactory, NC-No petition, NR-No grade
+                reported, CR-Credit toward Masters
               </Text>
               <Text style={styles.disclaimerText}>
-                Degree, NC-No credit toward Masters Degree, P-Pass only, no credit received
+                Degree, NC-No credit toward Masters Degree, P-Pass only, no
+                credit received
               </Text>
-              <Text style={styles.disclaimerText}>Student in in good standing unless otherwise indicated.</Text>
+              <Text style={styles.disclaimerText}>
+                Student in in good standing unless otherwise indicated.
+              </Text>
             </View>
             {/* Grading Scale */}
-
           </View>
         </View>
       </Page>
     </Document>
-  )
-}
+  );
+};
 
-export default TranscriptGenerator
-
+export default TranscriptGenerator;
