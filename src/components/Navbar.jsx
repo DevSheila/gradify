@@ -1,16 +1,8 @@
 import { Link } from "react-router-dom";
-import {
-  SignInButton,
-  SignUpButton,
-  UserButton,
-  useAuth,
-} from "@clerk/clerk-react";
 import { ModeToggle } from "./mode-toggle";
 import { Home, LayoutDashboard } from "lucide-react";
 
 const Navbar = () => {
-  const { isSignedIn } = useAuth();
-
   return (
     <nav className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -23,38 +15,20 @@ const Navbar = () => {
 
         <div className="flex items-center gap-4">
           <ModeToggle />
-          {isSignedIn ? (
-            <>
-              <Link
-                to="/"
-                className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
-              >
-                <Home className="h-4 w-4" />
-                Home
-              </Link>
-              <Link
-                to="/dashboard"
-                className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
-              </Link>
-              <UserButton afterSignOutUrl="/" />
-            </>
-          ) : (
-            <div className="flex items-center gap-4">
-              <SignInButton mode="modal">
-                <button className="text-sm font-medium hover:text-primary transition-colors">
-                  Sign In
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                  Sign Up
-                </button>
-              </SignUpButton>
-            </div>
-          )}
+          <Link
+            to="/"
+            className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Home
+          </Link>
+          <Link
+            to="/dashboard"
+            className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Link>
         </div>
       </div>
     </nav>

@@ -1,4 +1,3 @@
-import { SignUpButton, useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Calculator, FileText } from "lucide-react";
@@ -22,8 +21,6 @@ const features = [
 ];
 
 const LandingPage = () => {
-  const { isSignedIn } = useAuth();
-
   return (
     <div className="flex flex-col items-center">
       <section className="py-20 text-center">
@@ -35,17 +32,9 @@ const LandingPage = () => {
           Transform the way you manage student grades and transcripts with our
           powerful and easy-to-use platform.
         </p>
-        {isSignedIn ? (
-          <Button size="lg" className="font-semibold" asChild>
-            <Link to="/dashboard">Go to Dashboard</Link>
-          </Button>
-        ) : (
-          <SignUpButton mode="modal">
-            <Button size="lg" className="font-semibold">
-              Get Started
-            </Button>
-          </SignUpButton>
-        )}
+        <Button size="lg" className="font-semibold" asChild>
+          <Link to="/dashboard">Get Started</Link>
+        </Button>
       </section>
 
       <section className="w-full py-20 bg-muted/50">
