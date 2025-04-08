@@ -1,25 +1,19 @@
-import { useUser } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Settings } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { TranscriptsTable } from "@/components/TranscriptsTable";
 
-
 const Dashboard = () => {
-  const { user } = useUser();
-
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user.firstName || "User"}!
+          Welcome to Gradify!
         </h1>
         <p className="text-muted-foreground">
           Manage your student transcripts and grading from one place.
         </p>
       </div>
-
-
 
       <div>
         <div className="flex items-center justify-between mb-8">
