@@ -55,7 +55,21 @@ export function AcademicHistory({ studentId }) {
   if (!academicHistory) return null;
 
   const { transcripts, summary } = academicHistory;
-  const years = Object.keys(transcripts).sort((a, b) => b.localeCompare(a));
+  
+  // Helper function to extract numeric grade level
+  const getGradeLevel = (gradeStr) => {
+    if (!gradeStr) return 0;
+    const match = gradeStr.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+  };
+
+  // Sort years by grade level
+  const years = Object.keys(transcripts)
+    .sort((a, b) => {
+      const gradeA = getGradeLevel(transcripts[a][0].student.gradeLevel);
+      const gradeB = getGradeLevel(transcripts[b][0].student.gradeLevel);
+      return gradeA - gradeB;
+    });
 
   return (
     <div className="space-y-6">

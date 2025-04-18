@@ -204,76 +204,85 @@ const AcademicHistoryPDF = ({ academicHistory }) => {
     principalName: "",
   };
 
-  const academicYears = years.map((year) => {
-    const yearTranscripts = academicHistory.transcripts[year];
-    const firstTranscript = yearTranscripts[0];
+  // Helper function to extract numeric grade level
+  const getGradeLevel = (gradeStr) => {
+    if (!gradeStr) return 0;
+    const match = gradeStr.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+  };
 
-    // Update last valid values if current values are not N/A
-    if (
-      firstTranscript.student.gradeLevel &&
-      firstTranscript.student.gradeLevel !== "N/A"
-    ) {
-      lastValidValues.gradeLevel = firstTranscript.student.gradeLevel;
-    }
-    if (
-      firstTranscript.student.schoolName &&
-      firstTranscript.student.schoolName !== "N/A"
-    ) {
-      lastValidValues.schoolName = firstTranscript.student.schoolName;
-    }
-    if (
-      firstTranscript.student.schoolCode &&
-      firstTranscript.student.schoolCode !== "N/A"
-    ) {
-      lastValidValues.schoolCode = firstTranscript.student.schoolCode;
-    }
-    if (
-      firstTranscript.student.schoolAddress &&
-      firstTranscript.student.schoolAddress !== "N/A"
-    ) {
-      lastValidValues.schoolAddress = firstTranscript.student.schoolAddress;
-    }
+  const academicYears = years
+    .map((year) => {
+      const yearTranscripts = academicHistory.transcripts[year];
+      const firstTranscript = yearTranscripts[0];
 
-    if (
-      firstTranscript.student.studentAddress &&
-      firstTranscript.student.studentAddress !== "N/A"
-    ) {
-      lastValidValues.studentAddress = firstTranscript.student.studentAddress;
-    }
-    if (
-      firstTranscript.student.schoolPhone &&
-      firstTranscript.student.schoolPhone !== "N/A"
-    ) {
-      lastValidValues.schoolPhone = firstTranscript.student.schoolPhone;
-    }
-    if (
-      firstTranscript.student.principalName &&
-      firstTranscript.student.principalName !== "N/A"
-    ) {
-      lastValidValues.principalName = firstTranscript.student.principalName;
-    }
+      // Update last valid values if current values are not N/A
+      if (
+        firstTranscript.student.gradeLevel &&
+        firstTranscript.student.gradeLevel !== "N/A"
+      ) {
+        lastValidValues.gradeLevel = firstTranscript.student.gradeLevel;
+      }
+      if (
+        firstTranscript.student.schoolName &&
+        firstTranscript.student.schoolName !== "N/A"
+      ) {
+        lastValidValues.schoolName = firstTranscript.student.schoolName;
+      }
+      if (
+        firstTranscript.student.schoolCode &&
+        firstTranscript.student.schoolCode !== "N/A"
+      ) {
+        lastValidValues.schoolCode = firstTranscript.student.schoolCode;
+      }
+      if (
+        firstTranscript.student.schoolAddress &&
+        firstTranscript.student.schoolAddress !== "N/A"
+      ) {
+        lastValidValues.schoolAddress = firstTranscript.student.schoolAddress;
+      }
 
-    return {
-      year,
-      gradeLevel:
-        firstTranscript.student.gradeLevel === "N/A"
-          ? lastValidValues.gradeLevel
-          : firstTranscript.student.gradeLevel,
-      courses: yearTranscripts.flatMap((transcript) =>
-        transcript.units.map((unit) => ({
-          code: unit.code,
-          title: unit.name,
-          credits: unit.creditHours,
-          grade: unit.grade,
-        }))
-      ),
-      totalCredits: yearTranscripts.reduce(
-        (sum, t) => sum + t.totalCreditHours,
-        0
-      ),
-      gpa: yearTranscripts[0].gpa.toFixed(2),
-    };
-  });
+      if (
+        firstTranscript.student.studentAddress &&
+        firstTranscript.student.studentAddress !== "N/A"
+      ) {
+        lastValidValues.studentAddress = firstTranscript.student.studentAddress;
+      }
+      if (
+        firstTranscript.student.schoolPhone &&
+        firstTranscript.student.schoolPhone !== "N/A"
+      ) {
+        lastValidValues.schoolPhone = firstTranscript.student.schoolPhone;
+      }
+      if (
+        firstTranscript.student.principalName &&
+        firstTranscript.student.principalName !== "N/A"
+      ) {
+        lastValidValues.principalName = firstTranscript.student.principalName;
+      }
+
+      return {
+        year,
+        gradeLevel:
+          firstTranscript.student.gradeLevel === "N/A"
+            ? lastValidValues.gradeLevel
+            : firstTranscript.student.gradeLevel,
+        courses: yearTranscripts.flatMap((transcript) =>
+          transcript.units.map((unit) => ({
+            code: unit.code,
+            title: unit.name,
+            credits: unit.creditHours,
+            grade: unit.grade,
+          }))
+        ),
+        totalCredits: yearTranscripts.reduce(
+          (sum, t) => sum + t.totalCreditHours,
+          0
+        ),
+        gpa: yearTranscripts[0].gpa.toFixed(2),
+      };
+    })
+    .sort((a, b) => getGradeLevel(a.gradeLevel) - getGradeLevel(b.gradeLevel));
 
   // Prepare student info using last valid values for N/A fields
   const studentInfo = {
